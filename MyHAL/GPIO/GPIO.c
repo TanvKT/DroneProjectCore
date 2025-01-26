@@ -1,7 +1,7 @@
 /**
  * @file GPIO.c
  * @author Tanvin Thiagarajan (tthiagarajan@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2025-01-26
  * 
@@ -21,7 +21,7 @@
  */
 void my_GPIO_init(my_GPIO_t* o, my_GPIO_config* c)
 {
-
+ 
 }
 
 /**
