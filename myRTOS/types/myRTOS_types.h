@@ -16,57 +16,49 @@
  * 
  */
 typedef char myrtos_uint8;
-typedef enum myRTOS_bool_type_e {
+typedef enum MYRTOS_BOOL_TYPE_E {
     MYRTOS_FALSE,
     MYRTOS_TRUE,
-};
+} myRTOS_bool_type_e;
 
-typedef enum myRTOS_return_type_e {
+typedef enum MYRTOS_RETURN_TYPE_E {
     MYRTOS_SUCCESS,
     MYRTOS_FAIL
-};
+} myRTOS_return_type_e;
 
 /**
  * @brief Task Types
  * 
  */
-typedef struct myRTOS_task_type_s {
+typedef struct mMYRTOS_TASK_TYPE_S {
     const char* name;
     myrtos_uint8 priority;
     void* handle;
     void* args;
     myrtos_uint8 num_args;
-};
+} myRTOS_task_type_s;
 
 /**
  * @brief Scheduling Types
  * 
  */
-typedef enum myRTOS_schedule_type_e {
+typedef enum MYRTOS_SCHEDULE_TYPE_E {
     MYRTOS_ROUND_ROBIN
-};
-
-/**
- * @brief Main myrtos config type
- * 
- */
- typedef struct myRTOS_config_type_s {
-    myRTOS_schedule_type_e sched;
- };
+} myRTOS_schedule_type_e;
 
  /**
   * @brief Inter task communication types
   * 
   */
- typedef struct myRTOS_mutex_handle_s {
+ typedef struct MYRTOS_MUTEX_HANDLE_S {
     myRTOS_bool_type_e taken;
- };
+ } myRTOS_mutex_handle_s;
 
-typedef struct myRTOS_semaphore_handle_s {
+typedef struct MYRTOS_SEMAPHORE_HANDLE_S {
     myrtos_uint8 v;
-};
+} myRTOS_semaphore_handle_s;
 
-typedef struct myRTOS_queue_handle_s {
+typedef struct MYRTOS_QUEUE_HANDLE_S {
     int len;
     size_t size;
-};
+} myRTOS_queue_handle_s;
