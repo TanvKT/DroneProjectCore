@@ -37,7 +37,7 @@ typedef struct
  * 
  * If the array is filled then the array is re-allocated with double length
  */
-myRTOS_task_arr_s tasks[PRIORITY_LEVELS];
+myRTOS_task_arr_s tasks[PRIORITY_LEVELS - 1];
 
 /**
  * @brief helper function to add tasks to an array
@@ -83,11 +83,26 @@ myRTOS_return_type_e myrtos_init()
         tasks[i].entries = 0;
     }
 }
+
+/**
+ * @brief Register task to myRTOS scheduler
+ * 
+ * Task being passed in MUST exist in memory throughout entirety of function call
+ * 
+ * @param t task to register
+ * @return myRTOS_return_type_e 
+ */
 myRTOS_return_type_e myrtos_register_task(myRTOS_task_type_s* t)
 {
-
-}
-myRTOS_return_type_e myrtos_modify_task(myRTOS_task_type_s* t)
-{
-
+    switch(SCHED_TYPE)
+    {
+        case 0: //round robin
+            //register each task to same priority level
+            arr_add(&tasks[0], t);
+        break;
+        default: //either priority based scheduler
+            //register at desired priority level (truncate if not within range)
+            arr_add(&tasks[(t->priority >= PRIORITY_LEVELS) ? PRIORITY_LEVELS - 1 : t->priority], t);
+        break;
+    }
 }

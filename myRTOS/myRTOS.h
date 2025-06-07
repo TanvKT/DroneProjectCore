@@ -33,7 +33,6 @@
  */
 myRTOS_return_type_e    myrtos_init();
 myRTOS_return_type_e    myrtos_register_task(myRTOS_task_type_s* t);
-myRTOS_return_type_e    myrtos_modify_task(myRTOS_task_type_s* t);
 
 /**
  * @brief MyRTOS scheduling

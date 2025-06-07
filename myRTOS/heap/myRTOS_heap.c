@@ -28,5 +28,5 @@
 */
 myRTOS_return_type_e myrtos_heap_init(size_t s)
 {
-
+    
 }
