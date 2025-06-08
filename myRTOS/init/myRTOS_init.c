@@ -34,6 +34,7 @@ typedef struct
  * Structured as fixed array of dynamic arrays of tasks
  * Index in outer array is based on priority of task
  * Index in inner array is dynamically allocated based on number of tasks with said priority
+ * Using C stdlib here for task allocations since tasks need to be initialized before we begin running the scheduler
  * 
  * If the array is filled then the array is re-allocated with double length
  */
@@ -52,7 +53,7 @@ static myRTOS_return_type_e arr_add(myRTOS_task_arr_s* a, myRTOS_task_type_s* t)
     //array size check
     if (a->entries == a->len)
     {
-        a->arr = myrtos_realloc(a->arr, sizeof(myRTOS_task_type_s) * a->len * 2);
+        a->arr = realloc(a->arr, sizeof(myRTOS_task_type_s) * a->len * 2);
         a->len = a->len * 2;
     }
 
@@ -75,10 +76,10 @@ myRTOS_return_type_e myrtos_init()
     //initialize heap for dynamic task allocation
     myrtos_heap_init(HEAP_SIZE);
 
-    //allocate a dynamic array for holding registered tasks with priority
+    //allocate a dynamic array using c stdlib for holding registered tasks with priority
     for (int i = 0; i < PRIORITY_LEVELS; i++)
     {
-        tasks[i].arr = myrtos_alloc(sizeof(myRTOS_task_type_s) * INIT_TASK_ARR_SIZE);
+        tasks[i].arr = malloc(sizeof(myRTOS_task_type_s) * INIT_TASK_ARR_SIZE);
         tasks[i].len = INIT_TASK_ARR_SIZE;
         tasks[i].entries = 0;
     }

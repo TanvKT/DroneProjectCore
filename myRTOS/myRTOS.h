@@ -40,6 +40,8 @@ myRTOS_return_type_e    myrtos_register_task(myRTOS_task_type_s* t);
  */
 myRTOS_return_type_e    myrtos_schedule_start();
 myRTOS_return_type_e    myrtos_schedule_stop();
+myRTOS_return_type_e    myrtos_enable_interupts();
+myRTOS_return_type_e    myrtos_disable_interupts();
 
 /**
  * @brief MyRTOS inter task communication
@@ -70,5 +72,6 @@ myRTOS_return_type_e    myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d);
  * 
  */
 void*                   myrtos_alloc(size_t s);
-void*                   myrtos_realloc(void* p, size_t s);
+void*                   myrtos_realloc(void* p, size_t c, size_t s);
 myRTOS_return_type_e    myrtos_free(void* p);
+void                    myrtos_print_heap();
