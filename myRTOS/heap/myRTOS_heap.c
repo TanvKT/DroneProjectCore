@@ -19,6 +19,7 @@
 
 #include "myRTOS_heap.h"
 #include "memory.h"
+#include "stdio.h"
 
 /**
  * @brief Local struct for heap header type
@@ -173,5 +174,24 @@ myRTOS_return_type_e myrtos_free(void* p)
 }
 void myrtos_print_heap()
 {
-
+    printf("--------------------------------------------------\n");
+    
+    block_header_s* head = top;
+    size_t allocd_size = 0;
+    size_t free = HEAP_SIZE;
+    while (head->next != NULL)
+    {
+        printf("|                                                |\n");
+        printf("|          ADDR: 0x%x --- SIZE: %d               |\n", (void*)head + HEADER_SIZE, head->size);
+        printf("|                                                |\n");
+        printf("--------------------------------------------------\n");
+        allocd_size += head->size;
+        free -= HEADER_SIZE;
+    }
+    printf("|                                                |\n");
+    printf("|                  ALLOCATED: %d                 |\n", allocd_size);
+    printf("|                   FREE: %d/%d                  |\n", free, HEAP_SIZE);
+    printf("|                                                |\n");
+    printf("--------------------------------------------------\n");
+    
 }
