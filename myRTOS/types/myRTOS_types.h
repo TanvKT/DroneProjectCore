@@ -9,6 +9,9 @@
  * 
  */
 
+#ifndef __MYRTOS_TYPES_H__
+#define __MYRTOS_TYPES_H__
+
 #include "stdlib.h"
 
 /**
@@ -62,3 +65,5 @@ typedef struct MYRTOS_QUEUE_HANDLE_S {
     int len;
     size_t size;
 } myRTOS_queue_handle_s;
+
+#endif

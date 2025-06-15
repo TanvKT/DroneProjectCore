@@ -63,7 +63,10 @@ myRTOS_return_type_e myrtos_heap_init()
     // TOP      |                             free block                            |       END //
     //          |                                                                   |           //
     //////////////////////////////////////////////////////////////////////////////////////////////
+    myRTOS_return_type_e ret;
     top = (block_header_s*)calloc(HEAP_SIZE, 1); //making sure all bytes of heap set to 0
+    if (top == NULL)
+        return MYRTOS_FAIL;
     end = (block_header_s*)((void*)top + HEAP_SIZE - HEADER_SIZE);
 
     top->next = end;
@@ -72,7 +75,9 @@ myRTOS_return_type_e myrtos_heap_init()
     end->prev = top;
 
     //initialize memory lock so that we are thread safe
-    myrtos_mutex_init(&sg_mem_lock);
+    ret = myrtos_mutex_init(&sg_mem_lock);
+
+    return ret;
 }
 
 /**
@@ -171,6 +176,8 @@ myRTOS_return_type_e myrtos_free(void* p)
         head->next->prev = head->prev;
     }
     head->size = 0; //indicates block is free
+
+    return MYRTOS_SUCCESS;
 }
 void myrtos_print_heap()
 {
@@ -178,19 +185,19 @@ void myrtos_print_heap()
     
     block_header_s* head = top;
     size_t allocd_size = 0;
-    size_t free = HEAP_SIZE;
+    size_t free = HEAP_SIZE - 2*HEADER_SIZE;
     while (head->next != NULL)
     {
         printf("|                                                |\n");
-        printf("|          ADDR: 0x%x --- SIZE: %d               |\n", (void*)head + HEADER_SIZE, head->size);
+        printf("|          ADDR: 0x%x --- SIZE: %d               |\n", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
         printf("|                                                |\n");
         printf("--------------------------------------------------\n");
         allocd_size += head->size;
         free -= HEADER_SIZE;
     }
     printf("|                                                |\n");
-    printf("|                  ALLOCATED: %d                 |\n", allocd_size);
-    printf("|                   FREE: %d/%d                  |\n", free, HEAP_SIZE);
+    printf("|                  ALLOCATED: %d                 |\n", (unsigned int)allocd_size);
+    printf("|                   FREE: %d/%d                  |\n", (unsigned int)free, HEAP_SIZE);
     printf("|                                                |\n");
     printf("--------------------------------------------------\n");
     

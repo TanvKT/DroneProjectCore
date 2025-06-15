@@ -9,8 +9,8 @@
  * 
  */
 
-#include "myRTOS.h"
-#include "myRTOS_heap.h"
+#include "../myRTOS.h"
+#include "../heap/myRTOS_heap.h"
 #include "memory.h"
 
 /**
@@ -60,6 +60,8 @@ static myRTOS_return_type_e arr_add(myRTOS_task_arr_s* a, myRTOS_task_type_s* t)
     //copy over values
     memcpy(&(a->arr[a->entries]), t, sizeof(myRTOS_task_type_s));
     a->entries++;
+
+    return MYRTOS_SUCCESS;
 }
 
 /**
@@ -83,6 +85,8 @@ myRTOS_return_type_e myrtos_init()
         tasks[i].len = INIT_TASK_ARR_SIZE;
         tasks[i].entries = 0;
     }
+
+    return MYRTOS_SUCCESS;
 }
 
 /**
@@ -106,4 +110,6 @@ myRTOS_return_type_e myrtos_register_task(myRTOS_task_type_s* t)
             arr_add(&tasks[(t->priority >= PRIORITY_LEVELS) ? PRIORITY_LEVELS - 1 : t->priority], t);
         break;
     }
+
+    return MYRTOS_SUCCESS;
 }

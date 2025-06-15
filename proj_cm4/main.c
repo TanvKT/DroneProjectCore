@@ -40,9 +40,7 @@
 * so agrees to indemnify Cypress against all liability.
 *******************************************************************************/
 
-#include "cy_pdl.h"
-#include "cyhal.h"
-#include "cybsp.h"
+#include "main.h"
 
 
 int main(void)
@@ -58,6 +56,13 @@ int main(void)
 
     /* Enable global interrupts */
     __enable_irq();
+
+    /* Redirect stdio to UART */
+    cy_retarget_io_init(CYBSP_DEBUG_UART_TX,
+                        CYBSP_DEBUG_UART_RX,
+                        CY_RETARGET_IO_BAUDRATE);
+
+    heap_test();
 
     for (;;)
     {
