@@ -13,6 +13,7 @@
 #define __MYRTOS_TESTS_H__
 
 #include "../../myRTOS/myRTOS.h"
+#include "../proj_cm4/src/hw/UART.h"
 
 void heap_test();
 

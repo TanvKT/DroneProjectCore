@@ -52,5 +52,5 @@ DEVICE_CYBLE-416045-02-device_FEATURES:=NA
 DEVICE_CYBLE-416045-02-device_FLASH_KB:=1024
 DEVICE_CYBLE-416045-02-device_SRAM_KB:=288
 DEVICE_LIST:=CYBLE-416045-02-device
-DEVICE_TOOL_IDS:=bsp-assistant bt-configurator capsense-configurator capsense-tuner device-configurator dfuh-tool library-manager lin-configurator ml-configurator project-creator seglcd-configurator smartio-configurator
+DEVICE_TOOL_IDS:=bsp-assistant bt-configurator capsense-configurator capsense-tuner device-configurator dfuh-tool library-manager lin-configurator ml-configurator motor-suite-gui project-creator seglcd-configurator smartio-configurator
 RECIPE_DIR:=$(SEARCH_recipe-make-cat1a)

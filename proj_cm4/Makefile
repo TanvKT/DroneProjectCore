@@ -72,7 +72,7 @@ SOURCES=../Tests/myRTOS/myRTOS_tests.c ../myRTOS/init/myRTOS_init.c ../myRTOS/he
 INCLUDES=
 
 # Add additional defines to the build process (without a leading -D).
-DEFINES=
+DEFINES=CY_USING_HAL
 
 # Select softfp or hardfp floating point. Default is softfp.
 VFP_SELECT=

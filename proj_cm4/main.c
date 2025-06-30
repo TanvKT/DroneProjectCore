@@ -41,14 +41,14 @@
 *******************************************************************************/
 
 #include "main.h"
-
+#include "../Tests/myRTOS/myRTOS_tests.h"
 
 int main(void)
 {
     cy_rslt_t result;
 
     /* Initialize the device and board peripherals */
-    result = cybsp_init() ;
+    result = cybsp_init();
     if (result != CY_RSLT_SUCCESS)
     {
         CY_ASSERT(0);
@@ -57,10 +57,11 @@ int main(void)
     /* Enable global interrupts */
     __enable_irq();
 
-    /* Redirect stdio to UART */
-    cy_retarget_io_init(CYBSP_DEBUG_UART_TX,
-                        CYBSP_DEBUG_UART_RX,
-                        CY_RETARGET_IO_BAUDRATE);
+    result = usb_uart_init();
+    if (result != CY_RSLT_SUCCESS)
+    {
+        CY_ASSERT(0);
+    }
 
     heap_test();
 

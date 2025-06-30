@@ -16,7 +16,6 @@
 #include "cy_pdl.h"
 #include "cyhal.h"
 #include "cybsp.h"
-#include "cy_retarget_io.h"
 
 /* Include Standard C Libraries*/
 #include <ctype.h>
@@ -26,9 +25,10 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+/* TEST INCLUDES */
+#include "UART.h"
+
 /* MYRTOS INCLUDES */
 #include "../myRTOS/myRTOS.h"
-
-/* TEST INCLUDES */
 
 #endif

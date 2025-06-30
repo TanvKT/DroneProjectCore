@@ -96,7 +96,7 @@ void* myrtos_alloc(size_t s)
     myrtos_mutex_take(&sg_mem_lock);
 
     //Find the first free block of a specified size rounded up to nearest 8th bit
-    s += 8 - (s % 8);
+    s = (s % 8) ? s + 8 - (s % 8) : s;
     block_header_s* curr = top;
     while (curr->next != NULL)
     {
@@ -112,6 +112,7 @@ void* myrtos_alloc(size_t s)
             curr->next->prev = curr;
             if (curr->next->next != NULL)
                 curr->next->next->prev = curr->next;
+            break;
         }
         else
         {
@@ -179,26 +180,26 @@ myRTOS_return_type_e myrtos_free(void* p)
 
     return MYRTOS_SUCCESS;
 }
-void myrtos_print_heap()
+void myrtos_print_heap(char** str)
 {
-    printf("--------------------------------------------------\n");
+    sprintf(&str, "--------------------------------------------------\r\n");
     
     block_header_s* head = top;
     size_t allocd_size = 0;
     size_t free = HEAP_SIZE - 2*HEADER_SIZE;
     while (head->next != NULL)
     {
-        printf("|                                                |\n");
-        printf("|          ADDR: 0x%x --- SIZE: %d               |\n", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
-        printf("|                                                |\n");
-        printf("--------------------------------------------------\n");
+        sprintf(&str, "|                                                |\n");
+        sprintf(&str, "|          ADDR: 0x%x --- SIZE: %d               |\n", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
+        sprintf(&str, "|                                                |\n");
+        sprintf(&str, "--------------------------------------------------\n");
         allocd_size += head->size;
         free -= HEADER_SIZE;
     }
-    printf("|                                                |\n");
-    printf("|                  ALLOCATED: %d                 |\n", (unsigned int)allocd_size);
-    printf("|                   FREE: %d/%d                  |\n", (unsigned int)free, HEAP_SIZE);
-    printf("|                                                |\n");
-    printf("--------------------------------------------------\n");
+    sprintf(&str, "|                                                |\n");
+    sprintf(&str, "|                  ALLOCATED: %d                 |\n", (unsigned int)allocd_size);
+    sprintf(&str, "|                   FREE: %d/%d                  |\n", (unsigned int)free, HEAP_SIZE);
+    sprintf(&str, "|                                                |\n");
+    sprintf(&str, "--------------------------------------------------\n");
     
 }
