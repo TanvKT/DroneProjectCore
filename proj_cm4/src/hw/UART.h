@@ -27,7 +27,7 @@
 
 //general defs
 #define USB_UART_BAUD           115200
-#define USB_UART_BUFF_SIZE      128
+#define USB_UART_BUFF_SIZE      2048
 
 //globals
 extern cyhal_uart_t g_usb_uart;

@@ -20,6 +20,7 @@
 #include "myRTOS_heap.h"
 #include "memory.h"
 #include "stdio.h"
+#include "string.h"
 
 /**
  * @brief Local struct for heap header type
@@ -102,7 +103,7 @@ void* myrtos_alloc(size_t s)
     {
         size_t size = (size_t)curr->next - (size_t)curr;
 
-        if (size >= s)
+        if (curr->size == 0 && size >= (s + sizeof(block_header_s))) //is free and has space for alloc
         {
             //allocate block
             curr->size = s;
@@ -180,26 +181,37 @@ myRTOS_return_type_e myrtos_free(void* p)
 
     return MYRTOS_SUCCESS;
 }
+
+/**
+ * @brief Helper debug function to print heap layout into string
+ * 
+ * @param str pointer to string to print to
+ *            up to user to ensure string buffer has enough space to hold string
+ */
 void myrtos_print_heap(char** str)
 {
-    sprintf(&str, "--------------------------------------------------\r\n");
-    
     block_header_s* head = top;
     size_t allocd_size = 0;
-    size_t free = HEAP_SIZE - 2*HEADER_SIZE;
+    size_t free_n = HEAP_SIZE - 2*HEADER_SIZE;
+    char tmp[100];
+
+    sprintf(*str, "\r--------------------------------------------------\n\r");
     while (head->next != NULL)
     {
-        sprintf(&str, "|                                                |\n");
-        sprintf(&str, "|          ADDR: 0x%x --- SIZE: %d               |\n", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
-        sprintf(&str, "|                                                |\n");
-        sprintf(&str, "--------------------------------------------------\n");
+        strcat(*str, "|                                                |\n\r");
+        sprintf((char*)tmp, "           ADDR: 0x%x --- SIZE: %d\n\r", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
+        strcat(*str, (char*) tmp);
+        strcat(*str, "|                                                |\n\r");
+        strcat(*str, "--------------------------------------------------\n\r");
         allocd_size += head->size;
-        free -= HEADER_SIZE;
+        free_n -= HEADER_SIZE + head->size;
+        head = head->next;
     }
-    sprintf(&str, "|                                                |\n");
-    sprintf(&str, "|                  ALLOCATED: %d                 |\n", (unsigned int)allocd_size);
-    sprintf(&str, "|                   FREE: %d/%d                  |\n", (unsigned int)free, HEAP_SIZE);
-    sprintf(&str, "|                                                |\n");
-    sprintf(&str, "--------------------------------------------------\n");
-    
+    strcat(*str, "|                                                |\n\r");
+    sprintf((char*) tmp, "                  ALLOCATED: %d                 \n\r", (unsigned int)allocd_size);
+    strcat(*str, (char*) tmp);
+    sprintf((char*) tmp, "                   FREE: %d/%d                  \n\r", (unsigned int)free_n, HEAP_SIZE);
+    strcat(*str, (char*) tmp);
+    strcat(*str, "|                                                |\n\r");
+    strcat(*str, "--------------------------------------------------\n\r");
 }
