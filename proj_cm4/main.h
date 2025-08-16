@@ -29,6 +29,6 @@
 #include "UART.h"
 
 /* MYRTOS INCLUDES */
-#include "../myRTOS/myRTOS.h"
+#include "myRTOS.h"
 
 #endif

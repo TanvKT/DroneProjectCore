@@ -17,7 +17,7 @@
 #ifndef __MYRTOS_H__
 #define __MYRTOS_H__
 
-#include "types/myRTOS_types.h"
+#include "myRTOS_types.h"
 
 /**
  * @brief MyRTOS config MACROS

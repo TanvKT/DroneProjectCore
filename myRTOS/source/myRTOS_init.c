@@ -9,8 +9,8 @@
  * 
  */
 
-#include "../myRTOS.h"
-#include "../heap/myRTOS_heap.h"
+#include "myRTOS.h"
+#include "myRTOS_heap.h"
 #include "memory.h"
 
 /**

@@ -9,7 +9,7 @@
  * 
  */
 
-#include "../myRTOS.h"
+#include "myRTOS.h"
 
 myRTOS_return_type_e    myrtos_schedule_start(){return MYRTOS_SUCCESS;}
 myRTOS_return_type_e    myrtos_schedule_stop(){return MYRTOS_SUCCESS;}

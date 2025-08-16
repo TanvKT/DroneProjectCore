@@ -10,7 +10,7 @@
  */
 
 #include "UART.h"
-#include "../../myRTOS/myRTOS.h"
+#include "myRTOS.h"
 
 //globals
 cyhal_uart_t g_usb_uart;

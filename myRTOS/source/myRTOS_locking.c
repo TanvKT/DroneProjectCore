@@ -9,7 +9,7 @@
  * 
  */
 
-#include "../myRTOS.h"
+#include "myRTOS.h"
 
 /**
  * MUTEX

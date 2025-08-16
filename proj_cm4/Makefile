@@ -65,11 +65,11 @@ CORE_NAME=CM4_0
 # tree for source code and builds it. The SOURCES variable can be used to
 # manually add source code to the build process from a location not searched
 # by default, or otherwise not found by the build system.
-SOURCES=../Tests/myRTOS/myRTOS_tests.c ../myRTOS/init/myRTOS_init.c ../myRTOS/heap/myRTOS_heap.c ../myRTOS/scheduler/myRTOS_sched.c ../myRTOS/locking/myRTOS_locking.c
+SOURCES=../myRTOS/source/*.c
 
 # Like SOURCES, but for include directories. Value should be paths to
 # directories (without a leading -I).
-INCLUDES=
+INCLUDES=../myRTOS/include
 
 # Add additional defines to the build process (without a leading -D).
 DEFINES=CY_USING_HAL

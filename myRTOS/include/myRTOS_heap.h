@@ -11,7 +11,7 @@
 #ifndef __MYRTOS_HEAP_H__
 #define __MYRTOS_HEAP_H__
 
-#include "../myRTOS.h"
+#include "myRTOS.h"
 
 myRTOS_return_type_e myrtos_heap_init();
 
