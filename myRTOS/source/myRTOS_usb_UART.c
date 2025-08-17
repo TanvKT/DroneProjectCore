@@ -9,7 +9,7 @@
  * 
  */
 
-#include "UART.h"
+#include "myRTOS_usb_UART.h"
 #include "myRTOS.h"
 
 //globals

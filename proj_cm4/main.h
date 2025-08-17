@@ -25,9 +25,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-/* TEST INCLUDES */
-#include "UART.h"
-
 /* MYRTOS INCLUDES */
 #include "myRTOS.h"
 

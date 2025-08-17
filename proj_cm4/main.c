@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #include "main.h"
-#include "../Tests/myRTOS/myRTOS_tests.h"
+#include "test_heap.h"
 
 int main(void)
 {

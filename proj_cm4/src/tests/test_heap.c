@@ -9,7 +9,7 @@
  * 
  */
 
-#include "myRTOS_tests.h"
+#include "myRTOS.h"
 #include "malloc.h"
 
 void heap_test()

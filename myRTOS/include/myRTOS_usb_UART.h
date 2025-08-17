@@ -32,11 +32,5 @@
 //globals
 extern cyhal_uart_t g_usb_uart;
 
-//function declarations
-cy_rslt_t usb_uart_init();
-int     usb_uart_printf(const char* f, ...);
-ssize_t usb_uart_getline(char** sp, size_t len);
-int     usb_uart_getchar();
-
 
 #endif

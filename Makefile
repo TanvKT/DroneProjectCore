@@ -34,3 +34,15 @@ MTB_PROJECTS=proj_cm0p proj_cm4
 include common_app.mk
 
 include $(CY_TOOLS_DIR)/make/application.mk
+
+################################################################################
+# Custom Make Targets
+################################################################################
+# Make sure Unity exists before build
+.PHONY: unity
+unity:
+	./scripts/setup_unity.sh
+
+.PHONY: setup
+setup: unity
+	@echo "Grabbing Dependencies..."

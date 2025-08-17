@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef __MYRTOS_TESTS_H__
-#define __MYRTOS_TESTS_H__
+#ifndef __MYRTOS_HEAP_TESTS_H__
+#define __MYRTOS_HEAP_TESTS_H__
 
 #include "myRTOS.h"
 

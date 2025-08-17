@@ -9,6 +9,7 @@
 
 # ModusToolbox library repos or information about library dependencies
 libs/
+shlib/
 
 # Uncomment below line if you don't want to lock the library versions for your application
 # assetlocks.json

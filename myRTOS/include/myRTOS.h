@@ -18,6 +18,12 @@
 #define __MYRTOS_H__
 
 #include "myRTOS_types.h"
+#include "myRTOS_usb_UART.h"
+
+/* Include cyhal */
+#include "cy_pdl.h"
+#include "cyhal.h"
+#include "cybsp.h"
 
 /**
  * @brief MyRTOS config MACROS
@@ -30,6 +36,16 @@
                                         //2 - DYNAMIC-PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
 #define     PRIORITY_LEVELS     7       //default to 7 levels of priority (0 - 6) anything larger is truncated down
 #define     INIT_TASK_ARR_SIZE  4       //default allocate array of size 4 tasks
+
+/**
+ * @brief MyRTOS usb UART initialization
+ * 
+ */
+//function declarations
+cy_rslt_t usb_uart_init();
+int     usb_uart_printf(const char* f, ...);
+ssize_t usb_uart_getline(char** sp, size_t len);
+int     usb_uart_getchar();
 
 /**
  * @brief MyRTOS initialization and registration functions
