@@ -2,6 +2,15 @@
  * @file myRTOS_config.h
  * @author Tanvin Thiagarajan (tthigarajan@wisc.edu)
  * @brief Config defines for myRTOS
+ * 
+ *          IMPORTANT -- AS OF NOW --
+ *              To include myRTOS in a project the sources and inlcude flags must be modified to search for
+ *              myRTOS code, it should look something like the following:
+ *
+ *              SOURCES=$(wildcard ../myRTOS/source/*.c) $(UNITY_SRC)
+ *              INCLUDES=../myRTOS/include ../shlib/unity
+ *
+ * 
  * @version 0.1
  * @date 2025-08-19
  * 
@@ -21,6 +30,11 @@
 
 /* MEMORY */
 #define     MYRTOS_USE_LINKER                                           //IMPORTANT : comment line this out if not using linker
+                                                                        //  Part of the setup for this library involves including the linker file myRTOS.ld
+                                                                        //      within the linker script for each project after the .bss sections (INCLUDE myRTOS.ld)
+                                                                        //  The LDFLAGS tag in the Makefile must also be modified to LDFLAGS+=-L{path_to_myRTOS}
+                                                                        //      assuming myRTOS lives in a directory on the same level as the overall project
+                                                                        //      this would be LDFLAGS+=-L../myRTOS
 
 #define     MYRTOS_STACK_SIZE          (128 * 1024)                     //default allocate 128KB stack for tasks
 #define     MYRTOS_MIN_STACK_SIZE      (4 * 1024)                       //default minimum stack size for tasks 4KB
