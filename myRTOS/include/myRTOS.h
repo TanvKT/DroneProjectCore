@@ -21,11 +21,12 @@
 #include "myRTOS_config.h"
 
 /**
- * @brief MyRTOS initialization and registration functions
+ * @brief MyRTOS initialization and registration and debug functions
  * 
  */
 myRTOS_return_type_e    myrtos_init();
 myRTOS_return_type_e    myrtos_register_task(myRTOS_task_type_s* t);
+const char*             myrtos_debug_print(myRTOS_return_type_e r);
 
 /**
  * @brief MyRTOS scheduling

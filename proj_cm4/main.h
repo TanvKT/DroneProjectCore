@@ -29,6 +29,5 @@
 #include "myRTOS.h"
 
 /* HW INCLUDES */
-#include "UART.h"
 
 #endif

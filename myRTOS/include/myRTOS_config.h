@@ -7,7 +7,7 @@
  *              To include myRTOS in a project the sources and inlcude flags must be modified to search for
  *              myRTOS code, it should look something like the following:
  *
- *              SOURCES=$(wildcard ../myRTOS/source/*.c) $(UNITY_SRC)
+ *              SOURCES=$(wildcard ../myRTOS/source/ *.c) $(UNITY_SRC)
  *              INCLUDES=../myRTOS/include ../shlib/unity
  *
  * 
@@ -50,5 +50,9 @@
 
 #define     MYRTOS_PRIORITY_LEVELS     7                                //default to 7 levels of priority (0 - 6) anything larger is truncated down
                                                                         //          (NOT USED IF ROUND_ROBIN)
+
+/* MISC */
+#define     MYRTOS_DEBUG_MODE          1                                //0 - debug prints disabled
+                                                                        //1 - debug prints enabled
 
 #endif

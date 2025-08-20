@@ -9,15 +9,11 @@
  * 
  */
 
-#include "UART.h"
-#include "myRTOS.h"
-#include "cy_pdl.h"
-#include "cyhal.h"
-#include "cybsp.h"
+#include "myRTOS_UART.h"
 
 //globals
-cyhal_uart_t g_usb_uart;
-static myRTOS_mutex_handle_s s_usb_uart_lock;
+cyhal_uart_t g_myRTOS_uart;
+static myRTOS_mutex_handle_s s_myRTOS_uart_lock;
 
 
 //function declarations
@@ -26,26 +22,24 @@ static myRTOS_mutex_handle_s s_usb_uart_lock;
  * 
  * @return cy_rslt_t
  */
-cy_rslt_t usb_uart_init()
+myRTOS_return_type_e myRTOS_uart_init()
 {
     cy_rslt_t cy_ret;
     myRTOS_return_type_e my_ret;
 
-    
-    
-    cy_ret = cyhal_uart_init(&g_usb_uart, CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, NC, NC, NULL, NULL);
+    cy_ret = cyhal_uart_init(&g_myRTOS_uart, MYRTOS_UART_TX, MYRTOS_UART_RX, NC, NC, NULL, NULL);
     if (cy_ret != CY_RSLT_SUCCESS)
-        return cy_ret;
+        return MYRTOS_UART_INIT_FAIL;
     
-    cy_ret = cyhal_uart_set_baud(&g_usb_uart, USB_UART_BAUD, NULL);
+    cy_ret = cyhal_uart_set_baud(&g_myRTOS_uart, MYRTOS_UART_BAUD, NULL);
     if (cy_ret != CY_RSLT_SUCCESS)
-        return cy_ret;
+        return MYRTOS_UART_BAUD_FAIL;
 
-    my_ret = myrtos_mutex_init(&s_usb_uart_lock);
+    my_ret = myrtos_mutex_init(&s_myRTOS_uart_lock);
     if (my_ret != MYRTOS_SUCCESS)
-        return CY_RSLT_TYPE_FATAL;
+        return my_ret;
     
-    return CY_RSLT_SUCCESS;
+    return MYRTOS_SUCCESS;
 }
 
 /**
@@ -55,10 +49,10 @@ cy_rslt_t usb_uart_init()
  * @param len length of string to read
  * @return int length of string printed
  */
-static int usb_uart_write(char *ptr, int len)
+int myRTOS_uart_write(const char *ptr, size_t len)
 {
     //grab lock to become sole controller of uart
-    myrtos_mutex_take(&s_usb_uart_lock);
+    myrtos_mutex_take(&s_myRTOS_uart_lock);
 
     for (int i = 0; i < len; i++)
     {
@@ -66,16 +60,16 @@ static int usb_uart_write(char *ptr, int len)
         if (ptr[i] == '\0')
         {
             //give up lock so that other tasks can print
-            myrtos_mutex_give(&s_usb_uart_lock);
+            myrtos_mutex_give(&s_myRTOS_uart_lock);
             return i;
         }
 
         // Write string to UART
-        cyhal_uart_putc(&g_usb_uart, ptr[i]);
+        cyhal_uart_putc(&g_myRTOS_uart, ptr[i]);
     }
 
     //give up lock so that other tasks can print
-    myrtos_mutex_give(&s_usb_uart_lock);
+    myrtos_mutex_give(&s_myRTOS_uart_lock);
     return len;
 }
 
@@ -86,32 +80,32 @@ static int usb_uart_write(char *ptr, int len)
  * @param len length of string to read
  * @return int length actually read
  */
-static int usb_uart_read(char **ptr, int len)
+int myRTOS_uart_read(char *ptr, size_t len)
 {
     //grab lock to become sole controller of uart
-    myrtos_mutex_take(&s_usb_uart_lock);
+    myrtos_mutex_take(&s_myRTOS_uart_lock);
 
     for (int i = 0; i < len; ++i)
     {
         uint8_t ch;
         // Blocking receive
-        cyhal_uart_getc(&g_usb_uart, &ch, 0);
-        (*ptr)[i] = ch;
+        cyhal_uart_getc(&g_myRTOS_uart, &ch, 0);
+        ptr[i] = ch;
 
         // Echo back the input
-        cyhal_uart_putc(&g_usb_uart, ch);
+        cyhal_uart_putc(&g_myRTOS_uart, ch);
 
         if (ch == '\r' || ch == '\n')  // End on newline
         {
-            (*ptr)[i + 1] = '\0';
+            ptr[i + 1] = '\0';
             //give up lock so that other tasks can print
-            myrtos_mutex_give(&s_usb_uart_lock);
+            myrtos_mutex_give(&s_myRTOS_uart_lock);
             return i + 1;
         }
     }
 
     //give up lock so that other tasks can print
-    myrtos_mutex_give(&s_usb_uart_lock);
+    myrtos_mutex_give(&s_myRTOS_uart_lock);
     return len;
 }
 
@@ -121,16 +115,16 @@ static int usb_uart_read(char **ptr, int len)
  * @param f format string
  * @param ... format args
  */
-int usb_uart_printf(const char* f, ...)
+int myRTOS_uart_printf(const char* f, ...)
 {
-    char buf[USB_UART_BUFF_SIZE];  // You can increase this if needed
+    static char buf[MYRTOS_UART_BUFF_SIZE];  // You can increase this if needed
     va_list args;
     va_start(args, f);
     int len = vsnprintf(buf, sizeof(buf), f, args);
     va_end(args);
 
     // Send buffer over UART
-    return usb_uart_write(buf, len);
+    return myRTOS_uart_write(buf, len);
 }
 
 /**
@@ -141,13 +135,13 @@ int usb_uart_printf(const char* f, ...)
  * @param len max length to read
  * @return ssize_t length of string read
  */
-ssize_t usb_uart_getline(char** sp, size_t len)
+ssize_t myRTOS_uart_getline(char* sp, size_t len)
 {
     //not implementing for non null string, so if given as arg return fail
-    if (*sp == NULL)
+    if (sp == NULL)
         return -1;
 
-    return usb_uart_read(sp, len);
+    return myRTOS_uart_read(sp, len);
 }
 
 /**
@@ -155,17 +149,17 @@ ssize_t usb_uart_getline(char** sp, size_t len)
  * 
  * @return int char read in int form 
  */
-int usb_uart_getchar()
+int myRTOS_uart_getchar()
 {
     uint8_t c;
 
     //grab lock to become sole controller of uart
-    myrtos_mutex_take(&s_usb_uart_lock);
+    myrtos_mutex_take(&s_myRTOS_uart_lock);
 
-    cyhal_uart_getc(&g_usb_uart, &c, 0);
+    cyhal_uart_getc(&g_myRTOS_uart, &c, 0);
 
     //give up lock so that other tasks can print
-    myrtos_mutex_give(&s_usb_uart_lock);
+    myrtos_mutex_give(&s_myRTOS_uart_lock);
 
     return (int)c;
 }
