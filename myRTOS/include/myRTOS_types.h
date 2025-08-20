@@ -12,13 +12,13 @@
 #ifndef __MYRTOS_TYPES_H__
 #define __MYRTOS_TYPES_H__
 
-#include "stdlib.h"
+#include <stdlib.h>
+#include <stdint.h>
 
 /**
  * @brief Generic Types
  * 
  */
-typedef char myrtos_uint8;
 typedef enum MYRTOS_BOOL_TYPE_E {
     MYRTOS_FALSE,
     MYRTOS_TRUE,
@@ -26,28 +26,25 @@ typedef enum MYRTOS_BOOL_TYPE_E {
 
 typedef enum MYRTOS_RETURN_TYPE_E {
     MYRTOS_SUCCESS,
-    MYRTOS_FAIL
+    MYRTOS_FAIL,
+    MYRTOS_TASK_LIMIT_REACHED,
+    MYRTOS_MEMORY_LIMIT_REACHED,
+    MYRTOS_MEMORY_INVALID,
+    MYRTOS_MEMCPY_FAIL
 } myRTOS_return_type_e;
 
 /**
  * @brief Task Types
  * 
  */
-typedef struct mMYRTOS_TASK_TYPE_S {
+typedef struct MYRTOS_TASK_TYPE_S {
     const char* name;
-    myrtos_uint8 priority;
+    uint8_t priority;
     void* handle;
     void* args;
-    myrtos_uint8 num_args;
+    uint8_t num_args;
+    size_t stack_size;
 } myRTOS_task_type_s;
-
-/**
- * @brief Scheduling Types
- * 
- */
-typedef enum MYRTOS_SCHEDULE_TYPE_E {
-    MYRTOS_ROUND_ROBIN
-} myRTOS_schedule_type_e;
 
  /**
   * @brief Inter task communication types
@@ -58,7 +55,7 @@ typedef enum MYRTOS_SCHEDULE_TYPE_E {
  } myRTOS_mutex_handle_s;
 
 typedef struct MYRTOS_SEMAPHORE_HANDLE_S {
-    myrtos_uint8 v;
+    uint8_t v;
 } myRTOS_semaphore_handle_s;
 
 typedef struct MYRTOS_QUEUE_HANDLE_S {

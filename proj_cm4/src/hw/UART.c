@@ -9,8 +9,11 @@
  * 
  */
 
-#include "myRTOS_usb_UART.h"
+#include "UART.h"
 #include "myRTOS.h"
+#include "cy_pdl.h"
+#include "cyhal.h"
+#include "cybsp.h"
 
 //globals
 cyhal_uart_t g_usb_uart;
@@ -27,6 +30,8 @@ cy_rslt_t usb_uart_init()
 {
     cy_rslt_t cy_ret;
     myRTOS_return_type_e my_ret;
+
+    
     
     cy_ret = cyhal_uart_init(&g_usb_uart, CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX, NC, NC, NULL, NULL);
     if (cy_ret != CY_RSLT_SUCCESS)

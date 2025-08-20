@@ -296,6 +296,7 @@ SECTIONS
         __bss_end__ = .;
     } > ram
 
+    INCLUDE myRTOS.ld
 
     .heap (NOLOAD):
     {

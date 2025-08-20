@@ -44,5 +44,5 @@ unity:
 	./scripts/setup_unity.sh
 
 .PHONY: setup
-setup: unity
+setup: getlibs unity
 	@echo "Grabbing Dependencies..."

@@ -17,10 +17,11 @@
  * 
  */
 
-#include "myRTOS_heap.h"
-#include "memory.h"
-#include "stdio.h"
-#include "string.h"
+#include "myRTOS.h"
+#include "myRTOS_memory.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 /**
  * @brief Local struct for heap header type
@@ -34,7 +35,7 @@ typedef struct BLOCK_HEADER {
     struct BLOCK_HEADER* prev;      //(4 bytes) pointer to previous header, if prev is NULL, then we are on top block
 } block_header_s;
 
-#define HEADER_SIZE 16
+#define HEADER_SIZE 16      //we define header size as 16 bytes to keep our memory aligned to 8 byte blocks
  
 
 /**
@@ -65,10 +66,9 @@ myRTOS_return_type_e myrtos_heap_init()
     //          |                                                                   |           //
     //////////////////////////////////////////////////////////////////////////////////////////////
     myRTOS_return_type_e ret;
-    top = (block_header_s*)calloc(HEAP_SIZE, 1); //making sure all bytes of heap set to 0
-    if (top == NULL)
-        return MYRTOS_FAIL;
-    end = (block_header_s*)((void*)top + HEAP_SIZE - HEADER_SIZE);
+    top = (block_header_s*)myrtos_get_heap_bp();
+    if (!top) return MYRTOS_MEMORY_INVALID;
+    end = (block_header_s*)((void*)top + MYRTOS_HEAP_SIZE - HEADER_SIZE);
 
     top->next = end;
     end->next = NULL;
@@ -192,7 +192,7 @@ void myrtos_print_heap(char** str)
 {
     block_header_s* head = top;
     size_t allocd_size = 0;
-    size_t free_n = HEAP_SIZE - 2*HEADER_SIZE;
+    size_t free_n = MYRTOS_HEAP_SIZE - 2*HEADER_SIZE;
     char tmp[100];
 
     sprintf(*str, "\r--------------------------------------------------\n\r");
@@ -210,7 +210,7 @@ void myrtos_print_heap(char** str)
     strcat(*str, "|                                                |\n\r");
     sprintf((char*) tmp, "                  ALLOCATED: %d                 \n\r", (unsigned int)allocd_size);
     strcat(*str, (char*) tmp);
-    sprintf((char*) tmp, "                   FREE: %d/%d                  \n\r", (unsigned int)free_n, HEAP_SIZE);
+    sprintf((char*) tmp, "                   FREE: %d/%d                  \n\r", (unsigned int)free_n, MYRTOS_HEAP_SIZE);
     strcat(*str, (char*) tmp);
     strcat(*str, "|                                                |\n\r");
     strcat(*str, "--------------------------------------------------\n\r");

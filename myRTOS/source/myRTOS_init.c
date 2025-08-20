@@ -10,8 +10,11 @@
  */
 
 #include "myRTOS.h"
-#include "myRTOS_heap.h"
-#include "memory.h"
+#include "myRTOS_memory.h"
+#include "myRTOS_sched.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
 /**
  * @brief array type to assist in dynamic allocation of tasks
@@ -20,49 +23,23 @@
 typedef struct
 {
     int len;
-    int entries;
-    myRTOS_task_type_s* arr;
+    myRTOS_int_task_type_s arr[MYRTOS_MAX_TASKS];
 } myRTOS_task_arr_s;
 
 /**
  * @brief GLOBALS
  * 
  */
+static size_t n_tasks = 0;
+
 /**
  * TASK HOLDING ARRAY
  * 
- * Structured as fixed array of dynamic arrays of tasks
- * Index in outer array is based on priority of task
- * Index in inner array is dynamically allocated based on number of tasks with said priority
- * Using C stdlib here for task allocations since tasks need to be initialized before we begin running the scheduler
- * 
- * If the array is filled then the array is re-allocated with double length
+ * Memory block is preallocated with the worst case scenario in terms of maximum tasks possible
+ *      The number of tasks possible is calculated using the minimum stack size for a task
+ *      and the allocated stack space for those tasks
  */
-myRTOS_task_arr_s tasks[PRIORITY_LEVELS - 1];
-
-/**
- * @brief helper function to add tasks to an array
- * 
- * @param a array to add to
- * @param t task data to copy
- * 
- * @return myRTOS_return_type_e 
- */
-static myRTOS_return_type_e arr_add(myRTOS_task_arr_s* a, myRTOS_task_type_s* t)
-{
-    //array size check
-    if (a->entries == a->len)
-    {
-        a->arr = realloc(a->arr, sizeof(myRTOS_task_type_s) * a->len * 2);
-        a->len = a->len * 2;
-    }
-
-    //copy over values
-    memcpy(&(a->arr[a->entries]), t, sizeof(myRTOS_task_type_s));
-    a->entries++;
-
-    return MYRTOS_SUCCESS;
-}
+static myRTOS_task_arr_s* tasks;
 
 /**
  * @brief default initialization function for myrtos
@@ -75,15 +52,21 @@ static myRTOS_return_type_e arr_add(myRTOS_task_arr_s* a, myRTOS_task_type_s* t)
  */
 myRTOS_return_type_e myrtos_init()
 {
-    //initialize heap for dynamic task allocation
-    myrtos_heap_init(HEAP_SIZE);
+    myRTOS_return_type_e my_ret;
 
-    //allocate a dynamic array using c stdlib for holding registered tasks with priority
-    for (int i = 0; i < PRIORITY_LEVELS; i++)
+    //initialize memory regions for myRTOS
+    my_ret = myrtos_memory_init();
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
+
+    //initialize heap for dynamic task allocation
+    my_ret = myrtos_heap_init();
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
+
+    //grab the base pointer of the task management array
+    tasks = (myRTOS_task_arr_s*)myrtos_get_task_arr_bp();
+    for (int i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
     {
-        tasks[i].arr = malloc(sizeof(myRTOS_task_type_s) * INIT_TASK_ARR_SIZE);
-        tasks[i].len = INIT_TASK_ARR_SIZE;
-        tasks[i].entries = 0;
+        tasks[i].len = 0;
     }
 
     return MYRTOS_SUCCESS;
@@ -99,17 +82,29 @@ myRTOS_return_type_e myrtos_init()
  */
 myRTOS_return_type_e myrtos_register_task(myRTOS_task_type_s* t)
 {
-    switch(SCHED_TYPE)
-    {
-        case 0: //round robin
-            //register each task to same priority level
-            arr_add(&tasks[0], t);
-        break;
-        default: //either priority based scheduler
-            //register at desired priority level (truncate if not within range)
-            arr_add(&tasks[(t->priority >= PRIORITY_LEVELS) ? PRIORITY_LEVELS - 1 : t->priority], t);
-        break;
-    }
+    myRTOS_int_task_type_s* t_i;
+    size_t ss;
 
+    #ifndef MYRTOS_ROUND_ROBIN
+    //need to consider priority when allocating task
+    if (MYRTOS_MAX_TASKS * MYRTOS_PRIORITY_LEVELS == n_tasks) return MYRTOS_TASK_LIMIT_REACHED;
+    uint8_t p = t.priority < MYRTOS_PRIORITY_LEVELS ? t.priority : MYRTOS_PRIORITY_LEVELS - 1;
+    t_i = &tasks[p].arr[tasks[p].len];
+    if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    tasks[p].len++;
+    #else
+    //default to round robin (equal priority on tasks)
+    if (MYRTOS_MAX_TASKS == n_tasks) return MYRTOS_TASK_LIMIT_REACHED;
+    t_i = &tasks[0].arr[tasks[0].len];
+    if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    tasks[0].len++;
+    #endif
+
+    //allocate stack in reserved memory
+    ss = (t->stack_size < MYRTOS_MIN_STACK_SIZE) ? MYRTOS_MIN_STACK_SIZE : t->stack_size;
+    t_i->sp = myrtos_add_stack(ss);
+    if (!t_i->sp) return MYRTOS_MEMORY_LIMIT_REACHED;
+
+    n_tasks++;
     return MYRTOS_SUCCESS;
 }

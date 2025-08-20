@@ -46,6 +46,10 @@
 int main(void)
 {
     cy_rslt_t result;
+    myRTOS_return_type_e my_ret;
+
+    /* Enable global interrupts */
+    __enable_irq();
 
     /* Initialize the device and board peripherals */
     result = cybsp_init();
@@ -54,20 +58,37 @@ int main(void)
         CY_ASSERT(0);
     }
 
-    /* Enable global interrupts */
-    __enable_irq();
+    char* str = malloc(1024);
+    str[0] = '\0';
 
+    /* Initialize hardware */
+    //initialize usb serial uart first for console output
     result = usb_uart_init();
     if (result != CY_RSLT_SUCCESS)
     {
-        CY_ASSERT(0);
+        usb_uart_printf("UART INIT FAILED!!\r\n");
+        for(;;){} //hang here
     }
+
+    char* str1 = malloc(1024);
+    str1[0] = '\0';
+
+    /* Initialize myRTOS for testing */
+    my_ret = myrtos_init();
+    if (my_ret != MYRTOS_SUCCESS)
+    {
+        usb_uart_printf("MYRTOS INIT FAILED!!\r\n");
+        for (;;){} //hang here
+    }
+
+    char* str2 = malloc(1024);
+    str2[0] = '\0';
+
+    CY_ASSERT(str[0] == str1[0] == str2[0]);
 
     heap_test();
 
-    for (;;)
-    {
-    }
+    for (;;){}
 }
 
 /* [] END OF FILE */

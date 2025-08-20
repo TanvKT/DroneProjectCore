@@ -1,5 +1,5 @@
 /**
- * @file myRTOS_tests.h
+ * @file test_heap.h
  * @author your name (you@domain.com)
  * @brief 
  * @version 0.1
