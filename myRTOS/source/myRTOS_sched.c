@@ -10,7 +10,9 @@
  */
 
 #include "myRTOS.h"
+#include "myRTOS_sched.h"
 
+volatile bool g_sched_active = false;
 myRTOS_return_type_e    myrtos_schedule_start(){return MYRTOS_SUCCESS;}
 myRTOS_return_type_e    myrtos_schedule_stop(){return MYRTOS_SUCCESS;}
 myRTOS_return_type_e    myrtos_enable_interupts(){return MYRTOS_SUCCESS;}

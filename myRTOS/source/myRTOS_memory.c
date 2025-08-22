@@ -31,19 +31,13 @@ static size_t s_off_p = 0;
 static uint8_t* stack_start;
 
 /**
- * @brief initialize memory regions
+ * @brief set pointer to start of usable stack for tasks
  * 
- * Reserve space for task holding array
+ * @param p pointer to start of stack region
  */
-myRTOS_return_type_e myrtos_memory_init()
+void myrtos_memory_set_stack_start(void* p)
 {
-    #ifdef MYRTOS_ROUND_ROBIN
-        stack_start = &task_stacks_arr[(MYRTOS_MAX_TASKS * sizeof(myRTOS_task_type_s)) + sizeof(int)];
-    #else
-        stack_start = &task_stacks_arr[((MYRTOS_MAX_TASKS * sizeof(myRTOS_task_type_s)) + sizeof(int)) * MYRTOS_PRIORITY_LEVELS];
-    #endif
-
-    return (stack_start) ? MYRTOS_SUCCESS : MYRTOS_MEMORY_INVALID;
+    stack_start = (uint8_t*)p;
 }
 
 /**
@@ -62,7 +56,7 @@ void* myrtos_get_task_arr_bp()
  * @param s 
  * @return void* pointer to base of allocated stack
  */
-void*   myrtos_add_stack(size_t s)
+void* myrtos_add_stack(size_t s)
 {
     s_off_p += s;
     //ensure that we are not allocating past the buffer

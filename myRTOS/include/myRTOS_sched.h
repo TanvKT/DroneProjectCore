@@ -13,6 +13,7 @@
 #define __MYRTOS_SCHED_H__
 
 #include "myRTOS_types.h"
+#include <stdbool.h>
 
 /**
  * @brief Internal use task type
@@ -22,5 +23,7 @@ typedef struct MYRTOS_INT_TASK_TYPE_S {
     myRTOS_task_type_s t;   //task
     void* sp;               //stack pointer
 } myRTOS_int_task_type_s;
+
+extern volatile bool g_sched_active;
 
 #endif

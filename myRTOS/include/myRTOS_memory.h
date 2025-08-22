@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 /* memory init */
-myRTOS_return_type_e    myrtos_memory_init();
+void                    myrtos_memory_set_stack_start(void* p);
 void*                   myrtos_get_task_arr_bp();
 
 /* task stack modification */
