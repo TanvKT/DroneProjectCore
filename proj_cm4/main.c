@@ -41,7 +41,6 @@
 *******************************************************************************/
 
 #include "main.h"
-#include "test_heap.h"
 
 int main(void)
 {
@@ -69,7 +68,7 @@ int main(void)
     /* Initialize hardware */
 
     /* Start test */
-    heap_test();
+    return test_all();
 
     for (;;){}
 }

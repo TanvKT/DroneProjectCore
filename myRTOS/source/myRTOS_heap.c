@@ -19,23 +19,10 @@
 
 #include "myRTOS.h"
 #include "myRTOS_memory.h"
+#include "myRTOS_heap.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/**
- * @brief Local struct for heap header type
- * 
- * Total size 16 bytes, using multiples of 8 for each block
- *
- */
-typedef struct BLOCK_HEADER {
-    size_t size;                    //(4 bytes) when size is 0, the block is free
-    struct BLOCK_HEADER* next;      //(4 bytes) pointer to next header, if next is NULL, then we are on end block
-    struct BLOCK_HEADER* prev;      //(4 bytes) pointer to previous header, if prev is NULL, then we are on top block
-} block_header_s;
-
-#define HEADER_SIZE 16      //we define header size as 16 bytes to keep our memory aligned to 8 byte blocks
  
 
 /**
@@ -43,8 +30,26 @@ typedef struct BLOCK_HEADER {
  * 
  */
 static myRTOS_mutex_handle_s sg_mem_lock;
-static block_header_s* top;
-static block_header_s* end;
+static myrtos_block_header_s* top;
+static myrtos_block_header_s* end;
+
+/**
+ * @brief Zeroizes entire heap
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_zeroize_heap()
+{
+    uint8_t* heap = (uint8_t*)myrtos_get_heap_bp();
+    if (NULL == heap) return MYRTOS_MEMORY_INVALID;
+    //could just use memset for this, but compiler will optimize this the same way
+    for (size_t i = 0; i < MYRTOS_HEAP_SIZE; i++)
+    {
+        heap[i] = 0;
+    }
+
+    return MYRTOS_SUCCESS;
+}
 
 /**
  * @brief heap initialization function
@@ -66,9 +71,14 @@ myRTOS_return_type_e myrtos_heap_init()
     //          |                                                                   |           //
     //////////////////////////////////////////////////////////////////////////////////////////////
     myRTOS_return_type_e ret;
-    top = (block_header_s*)myrtos_get_heap_bp();
+
+    //need to ensure heap is zeroized before setting top and end blocks
+    ret = myrtos_zeroize_heap();
+    if (ret != MYRTOS_SUCCESS) return ret;
+
+    top = (myrtos_block_header_s*)myrtos_get_heap_bp();
     if (!top) return MYRTOS_MEMORY_INVALID;
-    end = (block_header_s*)((void*)top + MYRTOS_HEAP_SIZE - HEADER_SIZE);
+    end = (myrtos_block_header_s*)((void*)top + MYRTOS_HEAP_SIZE - MYRTOS_HEADER_SIZE);
 
     top->next = end;
     end->next = NULL;
@@ -96,23 +106,28 @@ void* myrtos_alloc(size_t s)
     //take lock so that only one allocation can happen at a time
     myrtos_mutex_take(&sg_mem_lock);
 
+    //ensure valid parameters
+    if (0 == s) return NULL;
+
     //Find the first free block of a specified size rounded up to nearest 8th bit
     s = (s % 8) ? s + 8 - (s % 8) : s;
-    block_header_s* curr = top;
+    myrtos_block_header_s* curr = top;
     while (curr->next != NULL)
     {
         size_t size = (size_t)curr->next - (size_t)curr;
 
-        if (curr->size == 0 && size >= (s + sizeof(block_header_s))) //is free and has space for alloc
+        if (curr->size == 0 && size >= (s + sizeof(myrtos_block_header_s))) //is free and has space for alloc
         {
             //allocate block
             curr->size = s;
-            block_header_s* tmp = curr->next;
-            curr->next = (void*)curr + s + HEADER_SIZE;
+            myrtos_block_header_s* tmp = curr->next;
+            curr->next = (void*)curr + s + MYRTOS_HEADER_SIZE;
+            if ((tmp == curr->next) && (curr->next != end)) break;
             curr->next->next = (curr->next == end) ? NULL : tmp; //need to make sure we don't break end block
             curr->next->prev = curr;
             if (curr->next->next != NULL)
                 curr->next->next->prev = curr->next;
+            curr->next->size = 0;  //we are creating a new block here so we need to ensure it is marked as free
             break;
         }
         else
@@ -129,7 +144,7 @@ void* myrtos_alloc(size_t s)
     if (curr->next == NULL)
         return NULL;
     else
-        return (void*)curr + HEADER_SIZE;
+        return (void*)curr + MYRTOS_HEADER_SIZE;
 }
 
 /**
@@ -138,23 +153,42 @@ void* myrtos_alloc(size_t s)
  * Automatically frees original memory but does not change pointer value
  * 
  * @param p pointer to original memory
- * @param c size of current memory to copy
  * @param s size of new block
  * @return void* pointer to new block or NULL if no space available
  */
-void* myrtos_realloc(void* p, size_t c, size_t s)
+void* myrtos_realloc(void* p, size_t s)
 {
-    //allocate new block
-    void* ret = myrtos_alloc(s);
+    myrtos_mutex_take(&sg_mem_lock);
 
-    //if ret is null then return
-    if (ret == NULL)
-        return NULL;
+    //get the header from this block and make sure it is valid (in the header list)
+    size_t s_tmp;
+    myrtos_block_header_s* head = (myrtos_block_header_s*)(p - MYRTOS_HEADER_SIZE);
+    myrtos_block_header_s* tmp = top;
+
+    if (0 == s) return NULL;
+    if (head->size == s) return p;
+    while (tmp->next != NULL)
+    {
+        if (tmp == head) break;
+        tmp = tmp->next;
+    }
+    if (tmp != head) return NULL;
+
+    /* Allocate a new block */
+    s_tmp = head->size;
+    myrtos_mutex_give(&sg_mem_lock);
+    void* ret = myrtos_alloc(s);
+    myrtos_mutex_take(&sg_mem_lock);
+
+    if (ret == NULL) return NULL;
+    if (ret == p) return ret;  //this is the case where we just extend the block
     
     //copy to new block
-    c = (c > s) ? s : c;
-    memcpy(ret, p, c);
-    //free old block and return new pointer
+    s_tmp = (s_tmp > s) ? s : s_tmp;
+    memcpy(ret, p, s_tmp);
+
+    //free old block
+    myrtos_mutex_give(&sg_mem_lock);
     myrtos_free(p);
     return ret;
 }
@@ -169,17 +203,49 @@ void* myrtos_realloc(void* p, size_t c, size_t s)
  */
 myRTOS_return_type_e myrtos_free(void* p)
 {
-    block_header_s* head = p - HEADER_SIZE;
+    myrtos_mutex_take(&sg_mem_lock);
+    myrtos_block_header_s* head = p - MYRTOS_HEADER_SIZE;
 
-    //set previous and next header to point to eachother
-    if (head != top) //don't need to change pointers if head is top block
+    head->size = 0; //indicates block is free
+
+    //need to consolidate blocks in the case where two free blocks are adjacent
+    if ((head->next != end) && (0 == head->next->size))
+    {
+        head->next->next->prev = head; //leaving heap "dirty" here (not clearing memory)
+        head->next = head->next->next;
+    }
+    if ((head != top && (0 == head->prev->size)))
     {
         head->prev->next = head->next;
         head->next->prev = head->prev;
     }
-    head->size = 0; //indicates block is free
 
+    myrtos_mutex_give(&sg_mem_lock);
     return MYRTOS_SUCCESS;
+}
+
+/**
+ * @brief Debug helper to return the addresses of header within the heap
+ * 
+ * @param arr array of header pointers
+ * @param n maximum number of items to add
+ * 
+ * @return size_t number of elements added
+ */
+size_t myrtos_list_heap(myrtos_block_header_s** arr, size_t n)
+{
+    myrtos_mutex_take(&sg_mem_lock);
+    if ((NULL == arr) || 0 == n) return 0;
+
+    myrtos_block_header_s* curr = top;
+    for (size_t i = 0; i < n; i++)
+    {
+        arr[i] = curr;
+        curr = curr->next;
+        if (NULL == curr) return i + 1;
+    }
+    myrtos_mutex_give(&sg_mem_lock);
+    return n;
 }
 
 /**
@@ -190,21 +256,22 @@ myRTOS_return_type_e myrtos_free(void* p)
  */
 void myrtos_print_heap(char** str)
 {
-    block_header_s* head = top;
+    myrtos_mutex_take(&sg_mem_lock);
+    myrtos_block_header_s* head = top;
     size_t allocd_size = 0;
-    size_t free_n = MYRTOS_HEAP_SIZE - 2*HEADER_SIZE;
+    size_t free_n = MYRTOS_HEAP_SIZE - 2*MYRTOS_HEADER_SIZE;
     char tmp[100];
 
     sprintf(*str, "\r--------------------------------------------------\n\r");
     while (head->next != NULL)
     {
         strcat(*str, "|                                                |\n\r");
-        sprintf((char*)tmp, "           ADDR: 0x%x --- SIZE: %d\n\r", (unsigned int)head + HEADER_SIZE, (unsigned int)head->size);
+        sprintf((char*)tmp, "           ADDR: 0x%x --- SIZE: %d\n\r", (unsigned int)head + MYRTOS_HEADER_SIZE, (unsigned int)head->size);
         strcat(*str, (char*) tmp);
         strcat(*str, "|                                                |\n\r");
         strcat(*str, "--------------------------------------------------\n\r");
         allocd_size += head->size;
-        free_n -= HEADER_SIZE + head->size;
+        free_n -= MYRTOS_HEADER_SIZE + head->size;
         head = head->next;
     }
     strcat(*str, "|                                                |\n\r");
@@ -214,4 +281,5 @@ void myrtos_print_heap(char** str)
     strcat(*str, (char*) tmp);
     strcat(*str, "|                                                |\n\r");
     strcat(*str, "--------------------------------------------------\n\r");
+    myrtos_mutex_give(&sg_mem_lock);
 }

@@ -30,4 +30,7 @@
 
 /* HW INCLUDES */
 
+/* TESTING INCLUDES */
+#include "tests.h"
+
 #endif

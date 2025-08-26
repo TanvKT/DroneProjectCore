@@ -9,11 +9,12 @@
  * 
  */
 
-#ifndef __MYRTOS_HEAP_TESTS_H__
-#define __MYRTOS_HEAP_TESTS_H__
+#ifndef __TESTS_H__
+#define __TESTS_H__
 
-#include "myRTOS.h"
-
+void init_test();
 void heap_test();
+void task_array_test();
+int test_all();
 
 #endif
