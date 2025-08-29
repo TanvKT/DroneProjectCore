@@ -16,6 +16,7 @@
 #include "myRTOS_task_queue.h"
 #include "myRTOS_memory.h"
 #include "myRTOS_heap.h"
+#include "myRTOS_sched.h"
 #include <string.h>
 
 static void test_task_equal(int i, myRTOS_task_type_s t, myRTOS_task_queue_s* tasks)
@@ -78,10 +79,10 @@ void task_array_test()
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     void* sp = myrtos_get_stack_bp();
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE - 1,    tasks->arr[0].sp, "Task PTR at index 0 didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2 - 1,  tasks->arr[1].sp, "Task PTR at index 1 didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8 - 1,  tasks->arr[2].sp, "Task PTR at index 2 didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14 - 1, tasks->arr[3].sp, "Task PTR at index 3 didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE,    tasks->arr[0].sp, "Task PTR at index 0 didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2,  tasks->arr[1].sp, "Task PTR at index 1 didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8,  tasks->arr[2].sp, "Task PTR at index 2 didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->arr[3].sp, "Task PTR at index 3 didn't match");
 
     //test allocating with too large of stack size
     myRTOS_task_type_s t5 = {.name = "t4", .priority=4, .stack_size=MYRTOS_STACK_SIZE};
@@ -111,18 +112,23 @@ void task_array_test()
         TEST_ASSERT_EQUAL_STRING_MESSAGE(t1.name, tasks->arr[i].t.name,                         "Name not matching within max allocate loop");
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(t1.priority, tasks->arr[i].t.priority,                  "Priority not matching within max allocate loop");
         TEST_ASSERT_EQUAL_size_t_MESSAGE(t1.stack_size, tasks->arr[i].t.stack_size,             "Stack Size not matching within max allocate loop");
-        TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*(i+1) - 1, tasks->arr[i].sp,   "Task PTR within max allocate loop didn't match");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*(i+1), tasks->arr[i].sp,   "Task PTR within max allocate loop didn't match");
     }
     //ensure that memory at bounds does not exceed allocated stack block
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*MYRTOS_MAX_TASKS, myrtos_get_heap_bp(), "End of allocated stack block not pointing to start of heap");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(tasks->arr[MYRTOS_MAX_TASKS-1].sp + 1, myrtos_get_heap_bp(), "Stack pointer for last task does not point to correct location");
+    TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)myrtos_get_heap_bp(), (size_t)sp + MYRTOS_MIN_STACK_SIZE*MYRTOS_MAX_TASKS, "End of allocated stack block not pointing to start of heap");
+    TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)myrtos_get_heap_bp(), (size_t)tasks->arr[MYRTOS_MAX_TASKS-1].sp, "Stack pointer for last task does not point to correct location");
+    TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)sp, (size_t)(&tasks->arr[MYRTOS_MAX_TASKS-1]) + sizeof(myRTOS_int_task_type_s), "End of task array does not point to correct location in memory");
 
     //test allocating another task when full
+    uint8_t* sp_ui = (uint8_t*)sp;
+    *sp_ui = 0xff;
     ret = myrtos_register_task_i(&t2);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_TASK_LIMIT_REACHED, ret, str);
     TEST_ASSERT_NOT_EQUAL_UINT8(t2.priority, tasks->arr[MYRTOS_MAX_TASKS].t.priority);
     TEST_ASSERT_NOT_EQUAL_size_t(t2.stack_size, tasks->arr[MYRTOS_MAX_TASKS].t.stack_size);
+    //ensure stack not modified
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(0xff, *sp_ui, "Stack modfiied when allocating on full task");
     //ensure heap header not modified
     myrtos_block_header_s** headers = malloc(sizeof(myrtos_block_header_s*) * 30);
     size_t n = myrtos_list_heap(headers, 30);

@@ -9,25 +9,27 @@
  * 
  */
 
+#include "myRTOS_config.h"
 #include "myRTOS_types.h"
 #include "myRTOS_memory.h"
+#include <stdio.h>
 #include <stdint.h>
 #include <memory.h>
 
 /* grab allocated memory regions ensuring 8-bit alignment */
 #ifdef MYRTOS_USE_LINKER
 __attribute__((aligned(8), section(".myrtos_tasks")))
-static uint8_t tasks_arr[MYRTOS_TASK_SIZE];
+static uint8_t tasks_arr[MYRTOS_TASK_SIZE + 1];
 
 __attribute__((aligned(8), section(".myrtos_stacks")))
-static uint8_t stacks_arr[MYRTOS_STACK_SIZE];
+static uint8_t stacks_arr[MYRTOS_STACK_SIZE + 1];
 
 __attribute__((aligned(8), section(".myrtos_heap")))
-static uint8_t heap_arr[MYRTOS_HEAP_SIZE];
+static uint8_t heap_arr[MYRTOS_HEAP_SIZE + 1];
 #else
-static uint8_t tasks_arr[MYRTOS_TASK_SIZE] __attribute__((aligned(8)));
-static uint8_t stacks_arr[MYRTOS_STACK_SIZE] __attribute__((aligned(8)));
-static uint8_t heap_arr[MYRTOS_HEAP_SIZE] __attribute__((aligned(8)));
+static uint8_t tasks_arr[MYRTOS_TASK_SIZE + 1] __attribute__((aligned(8)));
+static uint8_t stacks_arr[MYRTOS_STACK_SIZE + 1] __attribute__((aligned(8)));
+static uint8_t heap_arr[MYRTOS_HEAP_SIZE + 1] __attribute__((aligned(8)));
 #endif
 
 /* static stack pointer to start of next allocatable block of stack */
@@ -68,20 +70,23 @@ void*   myrtos_get_heap_bp()
 /**
  * @brief allocate a stack to a new task
  * 
- *          Need to subtract 1 from size since stack array indexing starts at 0
- *              Therefore at this point s_off_p = 0 means we have 1 byte allocated
- *              Since s_off_p is unsigned, we can't start it at -1, so we do subtraction here
+ *          Need to we have an extra bit of padding for the case where we
+ *              line up perfectly with the start of the heap, in this case the stack pointer would
+ *              point to the start of the heap and would corrupt the header
  * 
  * @param s 
  * @return void* pointer to base of allocated stack
  */
 void* myrtos_add_stack(size_t s)
 {
-    s_off_p += (0 == s_off_p) ? (s - 1) : s;
+    s_off_p += s;
     //ensure that we are not allocating past the buffer
-    if ((stack_start + s_off_p) > &stacks_arr[MYRTOS_STACK_SIZE - 1])
+    if ((stack_start + s_off_p) > &stacks_arr[MYRTOS_STACK_SIZE])
     {
-        s_off_p -= (0 == s_off_p) ? (s - 1) : s;
+        #if MYRTOS_DEBUG_MODE
+        printf("Attempted to allocate over bounds -> \nHeap Start    0x%x\nEnd Stack     0x%x\nStack Pointer 0x%x\n", (size_t)&heap_arr[0], (size_t)&stacks_arr[MYRTOS_STACK_SIZE], (size_t)stack_start+s_off_p);
+        #endif
+        s_off_p -= s;
         return NULL;
     }
     return (void*)stack_start + s_off_p;
