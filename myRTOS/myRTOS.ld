@@ -7,6 +7,18 @@
 *   To include add linker include after .bss section of project linker script
 */
 
+/*
+*   Allocate memory for task array
+*       This is where information about each task will be stored
+*       If priority is involved in scheduling this becomes a priority queue
+*/
+.myrtos_task_stacks (NOLOAD) :
+{
+    . = ALIGN(4);
+    KEEP(*(.myrtos_tasks))
+    . = ALIGN(4);
+} > ram
+
 /* 
 *   Allocate memory for individual task stacks 
 *       This is formatted as a contiguous block of memory with no safety checks
@@ -16,7 +28,7 @@
 .myrtos_task_stacks (NOLOAD) :
 {
     . = ALIGN(4);
-    KEEP(*(.myrtos_task_stacks))
+    KEEP(*(.myrtos_stacks))
     . = ALIGN(4);
 } > ram
 

@@ -19,16 +19,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <stdbool.h>
-
-/**
- * @brief array type to assist in priority queue allocation of tasks
- * 
- */
-typedef struct
-{
-    int len;
-    myRTOS_int_task_type_s* arr;
-} myRTOS_task_queue_s;
+#include <string.h>
 
 /**
  * TASK HOLDING ARRAY
@@ -45,6 +36,16 @@ static int task_idx = 0;
 #endif
 
 /**
+ * @brief Simple getter function for task queue, useful for testing
+ * 
+ * @return myRTOS_task_queue_s* 
+ */
+myRTOS_task_queue_s* myrtos_get_task_queue()
+{
+    return tasks;
+}
+
+/**
  * @brief Initialize task queue to start at given reserved memory address
  * 
  * @param p start address of task heap block
@@ -53,22 +54,7 @@ void myrtos_init_task_queue(void* p)
 {
     tasks = (myRTOS_task_queue_s*)p;
     tasks->len = 0;
-}
-
-/**
- * @brief Goes through each task and allocates the requested amount of stack space
- * 
- * @return myRTOS_return_type_e 
- */
-myRTOS_return_type_e myrtos_set_task_stacks()
-{
-    for (int i = 0; i < tasks->len; i++)
-    {
-        tasks->arr[i].sp = myrtos_add_stack(tasks->arr[i].t.stack_size);
-        if (tasks->arr[i].sp == NULL) return MYRTOS_MEMORY_LIMIT_REACHED;
-    }
-
-    return MYRTOS_SUCCESS;
+    tasks->arr = (myRTOS_int_task_type_s*)((void*)tasks + sizeof(myRTOS_queue_handle_s));
 }
 
 /**
@@ -89,17 +75,16 @@ static int compare_priority(const void* a, const void* b)
     myRTOS_int_task_type_s* t2 = (myRTOS_int_task_type_s*)b;
     return t1->t.priority - t2->t.priority;
 }
-void* myrtos_consolidate_tasks()
+void myrtos_sort_tasks()
 {
     //sort the array using qsort
     qsort(tasks->arr, tasks->len, sizeof(myRTOS_int_task_type_s), compare_priority);
-    return &(tasks[tasks->len]);
 }
 #else
-void* myrtos_consolidate_tasks()
+void myrtos_sort_tasks()
 {
-    //just returning pointer to end of task array
-    return &(tasks[tasks->len]);
+    //do nothing
+    return;
 }
 #endif
 
@@ -306,12 +291,20 @@ myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
  * @param t task to register
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_register_task(myRTOS_task_type_s* t)
+myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
 {
     myRTOS_int_task_type_s* t_i;
 
     if (MYRTOS_MAX_TASKS == tasks->len) return MYRTOS_TASK_LIMIT_REACHED;
     t_i = &tasks->arr[tasks->len];
+
+    //make sure stack size at least MINIUMUM
+    t->stack_size = (t->stack_size < MYRTOS_MIN_STACK_SIZE) ? MYRTOS_MIN_STACK_SIZE : t->stack_size;
+
+    //generate stack pointer for task
+    t_i->sp = myrtos_add_stack(t->stack_size);
+    if (t_i->sp == NULL) return MYRTOS_MEMORY_LIMIT_REACHED;
+
     #ifdef MYRTOS_ROUND_ROBIN
     //register tasks in linear array
     if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
@@ -331,5 +324,28 @@ myRTOS_return_type_e myrtos_register_task(myRTOS_task_type_s* t)
         return push(t_i);
     }
     #endif
+
+    tasks->len++;
     return MYRTOS_SUCCESS;
+}
+
+/**
+ * @brief Register a task via parameters
+ * 
+ *      This is the user accesible function from myRTOS.h
+ * 
+ * @param name name of task for debug purposes (will be truncated if higher than MYRTOS_TASK_NAME_LEN)
+ * @param priority uint8_t priority value (lower is higher priority)
+ * @param handle function handle for task code execution
+ * @param args pointer to args of function (must be static or global, i.e. remain in scope while task is running)
+ * @param stack_size total size of stack to allocate (if lower than minimum will be set to MYRTOS_MIN_STACK_SIZE)
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_register_task
+(const char* name, uint8_t priority, void* handle, void* args, size_t stack_size)
+{
+    myRTOS_task_type_s t = {.priority = priority, .handle = handle, .args = args, .stack_size = stack_size};
+    strcpy(t.name, name);
+
+    return myrtos_register_task_i(&t);
 }

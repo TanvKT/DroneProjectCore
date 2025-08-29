@@ -17,15 +17,16 @@
 #ifndef __MYRTOS_H__
 #define __MYRTOS_H__
 
-#include "myRTOS_types.h"
 #include "myRTOS_config.h"
+#include "myRTOS_types.h"
 
 /**
  * @brief MyRTOS initialization and registration and debug functions
  * 
  */
+myRTOS_return_type_e    myrtos_reset();
 myRTOS_return_type_e    myrtos_init();
-myRTOS_return_type_e    myrtos_register_task(myRTOS_task_type_s* t);
+myRTOS_return_type_e    myrtos_register_task(const char* name, uint8_t priority, void* handle, void* args, size_t stack_size);
 const char*             myrtos_debug_print(myRTOS_return_type_e r);
 
 /**

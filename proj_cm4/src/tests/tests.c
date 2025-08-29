@@ -11,9 +11,13 @@
 
 #include "tests.h"
 #include "unity.h"
+#include "myRTOS.h"
 #include <stdio.h>
 
-void setUp(void) {}
+void setUp(void) 
+{
+    myrtos_reset();
+}
 void tearDown(void) {}
 
 int test_all()

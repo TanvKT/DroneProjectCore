@@ -19,9 +19,7 @@
  */
 
  #ifndef __MYRTOS_CONFIG_H__
- #define __MYRTOS_CONGIF_H__
-
- #include "myRTOS_sched.h"
+ #define __MYRTOS_CONFIG_H__
 
  /**
  * @brief MyRTOS config MACROS
@@ -41,7 +39,7 @@
 #define     MYRTOS_HEAP_SIZE           (64 * 1024)                      //default heap size 64KB
 
 /* SCHEDULING */
-#define     MYRTOS_MAX_TASKS           (MYRTOS_STACK_SIZE / (MYRTOS_MIN_STACK_SIZE  + sizeof(myRTOS_int_task_type_s))) - 1    //max possible tasks used for memory allocation of task info array
+#define     MYRTOS_TASK_NAME_LEN       64                               //max length of task names
 
 #define     MYRTOS_ROUND_ROBIN                                          //ROUND_ROBIN       -       Every task is allotted equal CPU time
                                                                         //PRIORITY_BASED    -       Tasks of higher priority will get more CPU time

@@ -12,18 +12,15 @@
 #ifndef __MYRTOS_TYPES_H__
 #define __MYRTOS_TYPES_H__
 
+#include "myRTOS_config.h"
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /**
  * @brief Generic Types
  * 
  */
-typedef enum MYRTOS_BOOL_TYPE_E {
-    MYRTOS_FALSE,
-    MYRTOS_TRUE,
-} myRTOS_bool_type_e;
-
 typedef enum MYRTOS_RETURN_TYPE_E {
     MYRTOS_SUCCESS,
     MYRTOS_FAIL,
@@ -33,7 +30,8 @@ typedef enum MYRTOS_RETURN_TYPE_E {
     MYRTOS_MEMORY_INVALID,
     MYRTOS_MEMCPY_FAIL,
     MYRTOS_UART_INIT_FAIL,
-    MYRTOS_UART_BAUD_FAIL
+    MYRTOS_UART_BAUD_FAIL,
+    MYRTOS_MEMINIT_FAIL
 } myRTOS_return_type_e;
 #define MYRTOS_SUCCESS_S                "MYRTOS_SUCCESS"
 #define MYRTOS_FAIL_S                   "MYRTOS_FAIL"
@@ -44,17 +42,17 @@ typedef enum MYRTOS_RETURN_TYPE_E {
 #define MYRTOS_MEMCPY_FAIL_S            "MYRTOS_MEMCPY_FAIL"
 #define MYRTOS_UART_INIT_FAIL_S         "MYRTOS_UART_INIT_FAIL"
 #define MYRTOS_UART_BAUD_FAIL_S         "MYRTOS_UART_BAUD_FAIL"
+#define MYRTOS_MEMINIT_FAIL_S           "MYRTOS_MEMINIT_FAIL"
 
 /**
  * @brief Task Types
  * 
  */
 typedef struct MYRTOS_TASK_TYPE_S {
-    const char* name;
+    char name[MYRTOS_TASK_NAME_LEN];
     uint8_t priority;
     void* handle;
     void* args;
-    uint8_t num_args;
     size_t stack_size;
 } myRTOS_task_type_s;
 
@@ -63,7 +61,7 @@ typedef struct MYRTOS_TASK_TYPE_S {
   * 
   */
  typedef struct MYRTOS_MUTEX_HANDLE_S {
-    myRTOS_bool_type_e taken;
+    bool taken;
  } myRTOS_mutex_handle_s;
 
 typedef struct MYRTOS_SEMAPHORE_HANDLE_S {

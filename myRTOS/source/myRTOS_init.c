@@ -24,24 +24,20 @@
  * 
  */
 
-/**
- * @brief default initialization function for myrtos
- * 
- * Initialize MyRTOS stack and management data
- * 
- * @param c config values for MyRTOS program, if null will use defaults
+ /**
+ * @brief Reset myRTOS allocations
  * 
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_init()
+myRTOS_return_type_e myrtos_reset()
 {
     myRTOS_return_type_e my_ret;
 
-    //need to initialize myRTOS UART before anything
-    my_ret = myRTOS_uart_init();
+    //reset memory (zeroize)
+    my_ret = myrtos_reset_memory();
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
     #if MYRTOS_DEBUG_MODE
-    printf("---------MYRTOS UART INITIALIZED---------\r\n");
+    printf("--------MYRTOS MEMORY INITIALIZED--------\r\n");
     #endif
 
     //initialize heap for dynamic task allocation
@@ -62,6 +58,29 @@ myRTOS_return_type_e myrtos_init()
     printf("-----MYRTOS SUCCESSFULLY INITIALIZED-----\r\n");
     #endif
     return MYRTOS_SUCCESS;
+}
+
+/**
+ * @brief default initialization function for myrtos
+ * 
+ * Initialize MyRTOS stack and management data
+ * 
+ * @param c config values for MyRTOS program, if null will use defaults
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_init()
+{
+    myRTOS_return_type_e my_ret;
+
+    //need to initialize myRTOS UART before anything
+    my_ret = myRTOS_uart_init();
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
+    #if MYRTOS_DEBUG_MODE
+    printf("---------MYRTOS UART INITIALIZED---------\r\n");
+    #endif
+
+    return myrtos_reset();
 }
 
 /**
@@ -91,6 +110,8 @@ const char* myrtos_debug_print(myRTOS_return_type_e r)
             return MYRTOS_UART_INIT_FAIL_S;
         case MYRTOS_UART_BAUD_FAIL :
             return MYRTOS_UART_BAUD_FAIL_S;
+        case MYRTOS_MEMINIT_FAIL :
+            return MYRTOS_MEMINIT_FAIL_S;
         default :
             return MYRTOS_SUCCESS_S;
     }
