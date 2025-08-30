@@ -41,10 +41,10 @@
 /* SCHEDULING */
 #define     MYRTOS_TASK_NAME_LEN       64                               //max length of task names
 
-#define     MYRTOS_ROUND_ROBIN                                          //ROUND_ROBIN       -       Every task is allotted equal CPU time
-                                                                        //PRIORITY_BASED    -       Tasks of higher priority will get more CPU time
+#define     MYRTOS_ROUND_ROBIN                                          //MYRTOS_ROUND_ROBIN       -       Every task is allotted equal CPU time
+                                                                        //MYRTOS_PRIORITY_BASED    -       Tasks of higher priority will get more CPU time
                                                                         //                              If two tasks have the same priority, round robin is used
-                                                                        //DYNAMIC_PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
+                                                                        //MYRTOS_DYNAMIC_PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
 
 #define     MYRTOS_PRIORITY_LEVELS     7                                //default to 7 levels of priority (0 - 6) anything larger is truncated down
                                                                         //          (NOT USED IF ROUND_ROBIN)

@@ -1,7 +1,7 @@
 /**
  * @file test_task_arr.c
  * @author your name (you@domain.com)
- * @brief Tests task array priority queue functionality
+ * @brief Tests task array
  * @version 0.1
  * @date 2025-08-22
  * 
@@ -28,7 +28,6 @@ static void test_task_equal(int i, myRTOS_task_type_s t, myRTOS_task_queue_s* ta
 
 void task_array_test()
 {
-    #define MYRTOS_PRIORITY_LEVELS 7
     myRTOS_task_queue_s* tasks;
     myRTOS_return_type_e ret;
     char str[64];
@@ -40,13 +39,6 @@ void task_array_test()
     TEST_ASSERT_EQUAL_size_t_MESSAGE(0, tasks->len,                                         "Task queue not empty on initialization");
     TEST_ASSERT_EQUAL_PTR_MESSAGE((void*)tasks + sizeof(myRTOS_queue_handle_s), tasks->arr, "Task Array Pointer not pointing to correct location in memory");
 
-    /* Test Round Robin */
-    #ifndef MYRTOS_ROUND_ROBIN
-    #define MYRTOS_ROUND_ROBIN
-    #undef  MYRTOS_PRIORITY_BASED
-    #undef  MYRTOS_DYNAMIC_PRIORITY
-    #endif
-
     //register a task
     myRTOS_task_type_s t1 = {.name = "t1", .priority=0, .stack_size=MYRTOS_MIN_STACK_SIZE};
     ret = myrtos_register_task_i(&t1);
@@ -55,23 +47,25 @@ void task_array_test()
     test_task_equal(0, t1, tasks);
 
     //round robin shouldn't care about priority levels
-    myRTOS_task_type_s t2 = {.name = "t2", .priority=100, .stack_size=MYRTOS_MIN_STACK_SIZE/2}; //pushing lower stack size, should be ceil'd to MIN
+    myRTOS_task_type_s t2 = {.name = "t2", .priority=MYRTOS_PRIORITY_LEVELS-1, .stack_size=MYRTOS_MIN_STACK_SIZE/2}; //pushing lower stack size, should be ceil'd to MIN
                                                                                                 //testing this later in stack testing section though
     ret = myrtos_register_task_i(&t2);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     test_task_equal(1, t2, tasks);
 
-    //test sort (shouldn't do anything)
+    //test sort (shouldn't do anything) if round robin
     myRTOS_task_type_s t3 = {.name = "t3", .priority=4, .stack_size=MYRTOS_MIN_STACK_SIZE*6};
     ret = myrtos_register_task_i(&t3);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     test_task_equal(2, t3, tasks);
+    #ifdef MYRTOS_ROUND_ROBIN //only testing this for round robin, if testing priority based then this will be done in queue testing
     myrtos_sort_tasks();
     test_task_equal(0, t1, tasks);
     test_task_equal(1, t2, tasks);
     test_task_equal(2, t3, tasks);  //task array should not be modified
+    #endif
 
     //test allocated stack pointers
     myRTOS_task_type_s t4 = {.name = "t4", .priority=4, .stack_size=MYRTOS_MIN_STACK_SIZE*6};
@@ -85,7 +79,7 @@ void task_array_test()
     TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->arr[3].sp, "Task PTR at index 3 didn't match");
 
     //test allocating with too large of stack size
-    myRTOS_task_type_s t5 = {.name = "t4", .priority=4, .stack_size=MYRTOS_STACK_SIZE};
+    myRTOS_task_type_s t5 = {.name = "t5", .priority=4, .stack_size=MYRTOS_STACK_SIZE};
     ret = myrtos_register_task_i(&t5);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_MEMORY_LIMIT_REACHED, ret, str);
@@ -137,10 +131,4 @@ void task_array_test()
     TEST_ASSERT_EQUAL_size_t_MESSAGE(0,headers[0]->size, "Top header size not zero with no allocations");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(NULL, headers[1]->next, "End header next value is not NULL");
     TEST_ASSERT_EQUAL_size_t_MESSAGE(0, headers[1]->size, "End header size not zero");
-
-    /* Test Priority Based and Dynamic */
-    /* Mostly just going to test priority queue functionality here as the functionality for testing stack size and everything is the same */
-    #undef   MYRTOS_ROUND_ROBIN
-    #define  MYRTOS_PRIORITY_BASED //priority based and dynamic priority have same functionality here
-    myrtos_reset();
 }

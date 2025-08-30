@@ -79,6 +79,7 @@ void myrtos_sort_tasks()
 {
     //sort the array using qsort
     qsort(tasks->arr, tasks->len, sizeof(myRTOS_int_task_type_s), compare_priority);
+    sorted = true;
 }
 #else
 void myrtos_sort_tasks()
@@ -143,9 +144,9 @@ static void heap_remove(int i)
     int right = 2*i + 2;
 
     //if either the left or right child has a lower priority value (higher priority) than the root, swap and recurse
-    if ((left < tasks->len) && (tasks->arr[left].t.priority < tasks->arr[l].t.priority))
+    if ((left < tasks->len) && (tasks->arr[left].t.priority <= tasks->arr[l].t.priority))
         l = left;  
-    if ((right < tasks->len) && (tasks->arr[right].t.priority < tasks->arr[l].t.priority))
+    if ((right < tasks->len) && (tasks->arr[right].t.priority <= tasks->arr[l].t.priority))
         l = right;
 
     if (l != i)
@@ -191,7 +192,9 @@ static inline myRTOS_return_type_e pop(myRTOS_int_task_type_s* t)
     if (!memcpy(&tasks->arr[0], &tasks->arr[tasks->len - 1], sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
 
     //consolidate heap after removal
+    tasks->len--;
     heap_remove(0);
+
     return MYRTOS_SUCCESS;
 }
 
@@ -305,17 +308,18 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     t_i->sp = myrtos_add_stack(t->stack_size);
     if (t_i->sp == NULL) return MYRTOS_MEMORY_LIMIT_REACHED;
 
-    #ifdef MYRTOS_ROUND_ROBIN
-    //register tasks in linear array
+    //copy task to end of array
     if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+
+    #ifdef MYRTOS_ROUND_ROBIN
+    tasks->len++;
     #else
     //quick check to ensure valid priority
-    t_i->t.priority = (t_i->t.priority >= MYRTOS_PRIORITY_LEVELS) ? MYRTOS_PRIORITY_LEVELS : t_i->t.priority;
+    t_i->t.priority = (t_i->t.priority >= MYRTOS_PRIORITY_LEVELS) ? MYRTOS_PRIORITY_LEVELS-1 : t_i->t.priority;
     //functionality depends on if the array has been sorted or not
     if (!sorted)
     {
-        //register tasks in linear array, sorting will be done on invocation of scheduler
-        if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+        //we need to manually increment task len here, push does it automatically
         tasks->len++;
     }
     else
@@ -325,7 +329,6 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     }
     #endif
 
-    tasks->len++;
     return MYRTOS_SUCCESS;
 }
 
