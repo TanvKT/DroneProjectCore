@@ -22,6 +22,12 @@ void tearDown(void) {}
 
 int test_all()
 {
+    #ifdef MYRTOS_ROUND_ROBIN
+    printf("\n\nMYRTOS_ROUND_ROBIN enabled\r\n");
+    #else
+    printf("\n\nMYRTOS_ROUND_ROBIN disabled\r\n");
+    #endif
+
     printf("Enter anything to start the tests...\r\n");
     getchar();
 
@@ -37,14 +43,6 @@ int test_all()
     printf("Enter anything to start the task array test...\r\n");
     getchar();
     RUN_TEST(task_array_test);
-
-    #ifdef MYRTOS_ROUND_ROBIN
-    printf("\n\nMYRTOS_ROUND_ROBIN enabled, re-define this as MYRTOS_PRIORITY_BASED or MYRTOS_DYNAMIC_PRIORITY to test priority queue\r\n");
-    #else
-    printf("Enter anything to start the priority queue test...\r\n");
-    getchar();
-    RUN_TEST(priority_queue_test);
-    #endif
 
     return UNITY_END();
 }

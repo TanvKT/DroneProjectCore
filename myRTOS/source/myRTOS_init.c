@@ -48,8 +48,8 @@ myRTOS_return_type_e myrtos_reset()
     #endif
 
     //grab the base pointer of the task management array
-    myrtos_init_task_queue(myrtos_get_task_arr_bp());
-
+    my_ret = myrtos_init_task_queue(myrtos_get_task_arr_bp());
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
     #if MYRTOS_DEBUG_MODE
     printf("------MYRTOS TASK ARRAY INITIALIZED------\r\n");
     #endif
