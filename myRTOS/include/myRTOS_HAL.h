@@ -1,0 +1,74 @@
+/**
+ * @file myRTOS_HAL.h
+ * @author your name (you@domain.com)
+ * @brief   Provides an abstraction layer to a chip specific HAL
+ * 
+ *              Currently only supporting the PSOC6 microcontroller, however
+ *                  the use of this file in conjunction with myRTOS_HAL.c
+ *                  allows for implementation specific code
+ * @version 0.1
+ * @date 2025-09-03
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
+#ifndef __MYRTOS_HAL_H__
+#define __MYRTOS_HAL_H__
+#include "myRTOS_config.h"
+#include <stdint.h>
+
+/* All these functions must be implemented using desired HAL in myRTOS_HAL.c */
+/**
+ * @brief Initialize UART on defined RX and TX pins using defined baud rate
+ * 
+ *          NOTE: Need to implement PIN defs for following:
+ *                - MYRTOS_UART_TX
+ *                - MYRTOS_UART_RX
+ * 
+ * @return int -1 if fail
+ */
+int myrtos_hal_uart_init();
+int myrtos_hal_uart_set_baud();
+int myrtos_hal_uart_getc(uint8_t* c);
+int myrtos_hal_uart_putc(uint32_t c);
+
+/**
+ * @brief Delays processor for a set peroid of milliseconds
+ * 
+ * @return int 
+ */
+int myrtos_hal_delay_ms(uint32_t ms);
+
+/**
+ * @brief Initialize a hardware timer on an internal clock
+ * 
+ *          Use defined period and frequency values
+ * 
+ * 
+ * 
+ * @return int -1 if fail
+ */
+typedef void (*myRTOS_callback_t)(void);
+int myrtos_hal_timer_init();
+int myrtos_hal_timer_configure();
+int myrtos_hal_register_callback(myRTOS_callback_t f);
+int myrtos_hal_timer_start();
+int myrtos_hal_timer_reset();
+int myrtos_hal_timer_stop();
+
+#ifdef MYRTOS_USE_CYHAL
+/* Device Specific Includes */
+#include "cy_pdl.h"
+#include "cyhal.h"
+#include "cybsp.h"
+#include "cyhal_uart.h"
+
+//device specific defs
+#define MYRTOS_UART_TX             CYBSP_DEBUG_UART_TX
+#define MYRTOS_UART_RX             CYBSP_DEBUG_UART_RX
+
+#else
+
+#endif
+#endif

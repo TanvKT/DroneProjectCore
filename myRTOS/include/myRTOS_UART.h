@@ -18,24 +18,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include "myRTOS.h"
-#include "cy_pdl.h"
-#include "cyhal.h"
-#include "cybsp.h"
-#include "cyhal_uart.h"
-
-// /* Overwrite Defs */
-// #define printf              myRTOS_uart_printf
-// #define getline(p,n,f)      myRTOS_uart_getline(p,n)
-// #define getchar             myRTOS_uart_getchar
-
-//general defs
-#define MYRTOS_UART_BAUD           115200
-#define MYRTOS_UART_BUFF_SIZE      2048
-#define MYRTOS_UART_TX             CYBSP_DEBUG_UART_TX
-#define MYRTOS_UART_RX             CYBSP_DEBUG_UART_RX
-
-//globals
-extern cyhal_uart_t g_myRTOS_uart;
 
 /**
  * @brief Functions

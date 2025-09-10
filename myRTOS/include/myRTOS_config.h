@@ -26,6 +26,15 @@
  * 
  */
 
+/* DEVICE */
+#define     MYRTOS_USE_CYHAL                                            //This define tells myRTOS to use CYHAL function for hardware abstraction
+#define     MYRTOS_UART_BAUD           115200
+#define     MYRTOS_UART_BUFF_SIZE      2048
+
+/* TASK TIMER */
+#define     MYRTOS_TASK_TIMER_PERIOD   999                              //Here we assume a 1MHz clock
+#define     MYRTOS_TASK_TIMER_FREQ     1000000u
+
 /* MEMORY */
 #define     MYRTOS_USE_LINKER                                           //IMPORTANT : comment line this out if not using linker
                                                                         //  Part of the setup for this library involves including the linker file myRTOS.ld

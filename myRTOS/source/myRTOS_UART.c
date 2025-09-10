@@ -10,9 +10,9 @@
  */
 
 #include "myRTOS_UART.h"
+#include "myRTOS_HAL.h"
 
 //globals
-cyhal_uart_t g_myRTOS_uart;
 static myRTOS_mutex_handle_s s_myRTOS_uart_lock;
 
 
@@ -24,20 +24,17 @@ static myRTOS_mutex_handle_s s_myRTOS_uart_lock;
  */
 myRTOS_return_type_e myRTOS_uart_init()
 {
-    cy_rslt_t cy_ret;
+    int hal_ret;
     myRTOS_return_type_e my_ret;
 
-    cy_ret = cyhal_uart_init(&g_myRTOS_uart, MYRTOS_UART_TX, MYRTOS_UART_RX, NC, NC, NULL, NULL);
-    if (cy_ret != CY_RSLT_SUCCESS)
-        return MYRTOS_UART_INIT_FAIL;
+    hal_ret = myrtos_hal_uart_init();
+    if (-1 == hal_ret) return MYRTOS_UART_INIT_FAIL;
     
-    cy_ret = cyhal_uart_set_baud(&g_myRTOS_uart, MYRTOS_UART_BAUD, NULL);
-    if (cy_ret != CY_RSLT_SUCCESS)
-        return MYRTOS_UART_BAUD_FAIL;
+    hal_ret = myrtos_hal_uart_set_baud(MYRTOS_UART_BAUD);
+    if (-1 == hal_ret) return MYRTOS_UART_BAUD_FAIL;
 
     my_ret = myrtos_mutex_init(&s_myRTOS_uart_lock);
-    if (my_ret != MYRTOS_SUCCESS)
-        return my_ret;
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
     
     return MYRTOS_SUCCESS;
 }
@@ -65,7 +62,7 @@ int myRTOS_uart_write(const char *ptr, size_t len)
         }
 
         // Write string to UART
-        cyhal_uart_putc(&g_myRTOS_uart, ptr[i]);
+        myrtos_hal_uart_putc(ptr[i]);
     }
 
     //give up lock so that other tasks can print
@@ -89,11 +86,11 @@ int myRTOS_uart_read(char *ptr, size_t len)
     {
         uint8_t ch;
         // Blocking receive
-        cyhal_uart_getc(&g_myRTOS_uart, &ch, 0);
+        myrtos_hal_uart_getc(&ch);
         ptr[i] = ch;
 
         // Echo back the input
-        cyhal_uart_putc(&g_myRTOS_uart, ch);
+        myrtos_hal_uart_putc(ch);
 
         if (ch == '\r' || ch == '\n')  // End on newline
         {
@@ -156,7 +153,7 @@ int myRTOS_uart_getchar()
     //grab lock to become sole controller of uart
     myrtos_mutex_take(&s_myRTOS_uart_lock);
 
-    cyhal_uart_getc(&g_myRTOS_uart, &c, 0);
+    myrtos_hal_uart_getc(&c);
 
     //give up lock so that other tasks can print
     myrtos_mutex_give(&s_myRTOS_uart_lock);

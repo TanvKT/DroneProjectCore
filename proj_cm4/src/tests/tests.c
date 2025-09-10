@@ -44,5 +44,9 @@ int test_all()
     getchar();
     RUN_TEST(task_array_test);
 
+    printf("Enter anything to start the task timer test...\r\n");
+    getchar();
+    RUN_TEST(task_timer_test);
+
     return UNITY_END();
 }

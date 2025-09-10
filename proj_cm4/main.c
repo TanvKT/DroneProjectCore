@@ -64,6 +64,7 @@ int main(void)
         printf("MYRTOS INIT FAILED with error %s\r\n", myrtos_debug_print(my_ret));
         for (;;){} //hang here
     }
+
     
     /* Initialize hardware */
 

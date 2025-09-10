@@ -13,6 +13,7 @@
 #define __MYRTOS_SCHED_H__
 
 #include "myRTOS_types.h"
+#include "myRTOS_HAL.h"
 #include <stdbool.h>
 
 /**

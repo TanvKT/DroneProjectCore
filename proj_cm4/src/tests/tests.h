@@ -15,6 +15,7 @@
 void init_test();
 void heap_test();
 void task_array_test();
+void task_timer_test();
 int  test_all();
 
 #endif

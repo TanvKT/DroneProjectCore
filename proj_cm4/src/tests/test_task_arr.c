@@ -430,10 +430,11 @@ void task_array_test()
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_TASK_LIMIT_REACHED, ret, str);
 
+    #ifdef MYRTOS_ROUND_ROBIN
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
+    #else
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN-1; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
@@ -450,10 +451,11 @@ void task_array_test()
     ret = myrtos_request_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_TASK_QUEUE_EMPTY, ret, str);
+    #ifdef MYRTOS_ROUND_ROBIN
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
+    #else
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN-1; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
