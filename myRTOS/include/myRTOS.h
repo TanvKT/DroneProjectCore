@@ -28,13 +28,15 @@ myRTOS_return_type_e    myrtos_reset();
 myRTOS_return_type_e    myrtos_init();
 myRTOS_return_type_e    myrtos_register_task(const char* name, uint8_t priority, void* handle, void* args, size_t stack_size);
 const char*             myrtos_debug_print(myRTOS_return_type_e r);
+myRTOS_return_type_e    myrtos_set_fatal();
 
 /**
  * @brief MyRTOS scheduling
  * 
  */
 myRTOS_return_type_e    myrtos_schedule_start();
-myRTOS_return_type_e    myrtos_schedule_stop();
+myRTOS_return_type_e    myrtos_schedule_disable();
+myRTOS_return_type_e    myrtos_schedule_enable();
 myRTOS_return_type_e    myrtos_enable_interupts();
 myRTOS_return_type_e    myrtos_disable_interupts();
 

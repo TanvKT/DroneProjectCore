@@ -240,16 +240,27 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     t_i = &tasks->level[t->priority].arr[tasks->level[t->priority].en]; //point to data at insert index of circular array 
                                                                         //  at given priority level
 
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    //if we are using dynamic priority, we need to record original priority in a seperate field
+    t_i->o_prio = t->priority;
+    t_i->trig = 0;
+    #endif
+
 
     //make sure stack size at least MINIUMUM
     t->stack_size = (t->stack_size < MYRTOS_MIN_STACK_SIZE) ? MYRTOS_MIN_STACK_SIZE : t->stack_size;
+
+    //ensure stack size is aligned with 8 bytes
+    t->stack_size = (t->stack_size % 8) ? t->stack_size + (8 - (t->stack_size % 8)) : t->stack_size;
 
     //generate stack pointer for task
     t_i->sp = myrtos_add_stack(t->stack_size);
     if (t_i->sp == NULL) return MYRTOS_MEMORY_LIMIT_REACHED;
 
     //copy task to end of array
-    if (!memcpy(t_i, t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    if (!memcpy(&(t_i->t), t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+
+    if (!myrtos_hal_stack_setup(t_i)) return MYRTOS_FAIL;
 
     //incremement circular array values
     tasks->level[t->priority].len++;

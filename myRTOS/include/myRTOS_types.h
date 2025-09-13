@@ -31,7 +31,9 @@ typedef enum MYRTOS_RETURN_TYPE_E {
     MYRTOS_MEMCPY_FAIL,
     MYRTOS_UART_INIT_FAIL,
     MYRTOS_UART_BAUD_FAIL,
-    MYRTOS_MEMINIT_FAIL
+    MYRTOS_MEMINIT_FAIL,
+    MYRTOS_TIMER_INIT_FAIL,
+    MYRTOS_SCHED_INIT_FAIL
 } myRTOS_return_type_e;
 #define MYRTOS_SUCCESS_S                "MYRTOS_SUCCESS"
 #define MYRTOS_FAIL_S                   "MYRTOS_FAIL"
@@ -43,6 +45,8 @@ typedef enum MYRTOS_RETURN_TYPE_E {
 #define MYRTOS_UART_INIT_FAIL_S         "MYRTOS_UART_INIT_FAIL"
 #define MYRTOS_UART_BAUD_FAIL_S         "MYRTOS_UART_BAUD_FAIL"
 #define MYRTOS_MEMINIT_FAIL_S           "MYRTOS_MEMINIT_FAIL"
+#define MYRTOS_TIMER_INIT_FAIL_S        "MYRTOS_TIMER_INIT_FAIL"
+#define MYRTOS_SCHED_INIT_FAIL_S        "MYRTOS_SCHED_INIT_FAIL"
 
 /**
  * @brief Task Types
@@ -55,6 +59,19 @@ typedef struct MYRTOS_TASK_TYPE_S {
     void* args;
     size_t stack_size;
 } myRTOS_task_type_s;
+
+/**
+ * @brief Internal use task type
+ * 
+ */
+typedef struct MYRTOS_INT_TASK_TYPE_S {
+    void* sp;               //stack pointer (This needs to be first element so memory addressing is consistent)
+    myRTOS_task_type_s t;   //task
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    uint8_t o_prio;         //original priority
+    uint8_t trig;           //number of times full time slice used
+    #endif
+} myRTOS_int_task_type_s;
 
  /**
   * @brief Inter task communication types

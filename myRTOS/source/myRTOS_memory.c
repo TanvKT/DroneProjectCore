@@ -74,7 +74,7 @@ void*   myrtos_get_heap_bp()
  *              line up perfectly with the start of the heap, in this case the stack pointer would
  *              point to the start of the heap and would corrupt the header
  * 
- * @param s 
+ * @param s NOTE: NEEDS TO BE 8-BYTE ALIGNED
  * @return void* pointer to base of allocated stack
  */
 void* myrtos_add_stack(size_t s)
@@ -89,7 +89,7 @@ void* myrtos_add_stack(size_t s)
         s_off_p -= s;
         return NULL;
     }
-    return (void*)stack_start + s_off_p;
+    return (void*)stack_start + s_off_p; //since we are using an ARM based processor the stack grows down
 }
 
 /**

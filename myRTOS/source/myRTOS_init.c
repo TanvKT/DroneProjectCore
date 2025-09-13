@@ -65,8 +65,6 @@ myRTOS_return_type_e myrtos_reset()
  * 
  * Initialize MyRTOS stack and management data
  * 
- * @param c config values for MyRTOS program, if null will use defaults
- * 
  * @return myRTOS_return_type_e 
  */
 myRTOS_return_type_e myrtos_init()
@@ -112,6 +110,10 @@ const char* myrtos_debug_print(myRTOS_return_type_e r)
             return MYRTOS_UART_BAUD_FAIL_S;
         case MYRTOS_MEMINIT_FAIL :
             return MYRTOS_MEMINIT_FAIL_S;
+        case MYRTOS_TIMER_INIT_FAIL :
+            return MYRTOS_TIMER_INIT_FAIL_S;
+        case MYRTOS_SCHED_INIT_FAIL :
+            return MYRTOS_SCHED_INIT_FAIL_S;
         default :
             return MYRTOS_SUCCESS_S;
     }

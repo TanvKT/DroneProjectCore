@@ -1,18 +1,17 @@
 /**
- * @file myRTOS_HAL.c
+ * @file myRTOS_HAL_CYHAL.c
  * @author your name (you@domain.com)
- * @brief   Provides an abstraction layer to allow myRTOS to run on multiple different chipsets
- * 
- *              Currently only the PSOC6 is implemented, however the goal of this file
- *                  is to make the implementation of other chipsets easy
+ * @brief Defines HAL abstracted functions for when using CYHAL library
  * @version 0.1
- * @date 2025-09-03
+ * @date 2025-09-13
  * 
  * @copyright Copyright (c) 2025
  * 
  */
+
 #include "myRTOS_config.h"
 #include "myRTOS_HAL.h"
+#include "myRTOS_sched.h"
 
 static myRTOS_callback_t s_cb;
 
@@ -101,8 +100,10 @@ int myrtos_hal_register_callback(myRTOS_callback_t f)
 {
     s_cb = f;
     cyhal_timer_register_callback(&myRTOS_task_timer, timer_callback_adapter, NULL);
-    //enable ISR event with priority 0 (ISR will be handled with highest priority compared to other GPIO interrupts)
-    cyhal_timer_enable_event(&myRTOS_task_timer, CYHAL_TIMER_IRQ_TERMINAL_COUNT, 0, true);
+    //enable ISR event with second lowest interrupt priority
+    //ISR will be handled with low priority, but not lower than PendSV
+    //This allows other interrupts to complete before context switch occurs
+    cyhal_timer_enable_event(&myRTOS_task_timer, CYHAL_TIMER_IRQ_TERMINAL_COUNT, myrtos_hal_get_lowest_priority() - 1, true);
     return 0;
 }
 int myrtos_hal_timer_start()
@@ -129,8 +130,4 @@ int myrtos_hal_timer_stop()
     if (cy_ret != CY_RSLT_SUCCESS) return -1;
     return 0;
 }
-
-#else   //add code here for device specific configuration
-        //ensure all functions in myRTOS_HAL.h are implemented
-        //running provided tests provide assistance in correct implementation
 #endif

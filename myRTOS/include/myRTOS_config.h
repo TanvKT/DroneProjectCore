@@ -26,14 +26,20 @@
  * 
  */
 
-/* DEVICE */
+/************************************************************************************************************************************************************
+*    @brief     NOTE: These defines allow myRTOS to be implemented on different devices, change accordingly                                                 *                                                                      
+************************************************************************************************************************************************************/
 #define     MYRTOS_USE_CYHAL                                            //This define tells myRTOS to use CYHAL function for hardware abstraction
+#define     MYRTOS_ARM_CM4                                              //This define tells myRTOS to use ARM CM4 architecture
+/***********************************************************************************************************************************************************/
+
+/* DEVICE */
 #define     MYRTOS_UART_BAUD           115200
 #define     MYRTOS_UART_BUFF_SIZE      2048
 
 /* TASK TIMER */
 #define     MYRTOS_TASK_TIMER_PERIOD   999                              //Here we assume a 1MHz clock
-#define     MYRTOS_TASK_TIMER_FREQ     1000000u
+#define     MYRTOS_TASK_TIMER_FREQ     1000000u                         //These numbers result in a 1ms period
 
 /* MEMORY */
 #define     MYRTOS_USE_LINKER                                           //IMPORTANT : comment line this out if not using linker
@@ -50,13 +56,17 @@
 /* SCHEDULING */
 #define     MYRTOS_TASK_NAME_LEN       64                               //max length of task names
 
-#define     MYRTOS_ROUND_ROBIN                                          //MYRTOS_ROUND_ROBIN       -       Every task is allotted equal CPU time
+#define     MYRTOS_DYNAMIC_PRIORITY                                          //MYRTOS_ROUND_ROBIN       -       Every task is allotted equal CPU time
                                                                         //MYRTOS_PRIORITY_BASED    -       Tasks of higher priority will get more CPU time
                                                                         //                              If two tasks have the same priority, round robin is used
                                                                         //MYRTOS_DYNAMIC_PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
 
 #define     MYRTOS_PRIORITY_LEVELS     7                                //default to 7 levels of priority (0 - 6) anything larger is truncated down
                                                                         //          (NOT USED IF ROUND_ROBIN)
+
+#ifdef      MYRTOS_DYNAMIC_PRIORITY
+#define     MYRTOS_PRIO_LOWER_THRESH   3                                //defines how many times a task can use full time slice before being demoted
+#endif
 
 /* MISC */
 #define     MYRTOS_DEBUG_MODE          1                                //0 - debug prints disabled

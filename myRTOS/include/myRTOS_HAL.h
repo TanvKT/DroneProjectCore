@@ -16,9 +16,26 @@
 #ifndef __MYRTOS_HAL_H__
 #define __MYRTOS_HAL_H__
 #include "myRTOS_config.h"
+#include "myRTOS_types.h"
 #include <stdint.h>
 
 /* All these functions must be implemented using desired HAL in myRTOS_HAL.c */
+
+/**
+ * @brief These funtions are architecture specific implementations for myRTOS
+ * 
+ *          These are needed to set task scheduler interrupt priorities
+ *          This is also needed to set stack pointers and save registers properly
+ * 
+ * @return int 
+ */
+int         myrtos_hal_schedule_init(myRTOS_int_task_type_s* t);
+int         myrtos_hal_stack_setup(myRTOS_int_task_type_s* t);
+void        myrtos_hal_set_hard_isr(void);          //these functions are wrappers that are not declared inline
+void        myrtos_hal_enable_interrupts(void);     //relying on compiler to optimize these
+void        myrtos_hal_disable_interrupts(void);
+uint8_t     myrtos_hal_get_lowest_priority(void);
+
 /**
  * @brief Initialize UART on defined RX and TX pins using defined baud rate
  * 

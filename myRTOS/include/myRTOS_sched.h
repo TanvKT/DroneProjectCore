@@ -16,15 +16,7 @@
 #include "myRTOS_HAL.h"
 #include <stdbool.h>
 
-/**
- * @brief Internal use task type
- * 
- */
-typedef struct MYRTOS_INT_TASK_TYPE_S {
-    myRTOS_task_type_s t;   //task
-    void* sp;               //stack pointer
-} myRTOS_int_task_type_s;
-
-extern volatile bool g_sched_active;
+extern myRTOS_int_task_type_s* s_curr_task_p;
+void myrtos_schedule(void);
 
 #endif
