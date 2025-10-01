@@ -114,6 +114,8 @@ const char* myrtos_debug_print(myRTOS_return_type_e r)
             return MYRTOS_TIMER_INIT_FAIL_S;
         case MYRTOS_SCHED_INIT_FAIL :
             return MYRTOS_SCHED_INIT_FAIL_S;
+        case MYRTOS_UNBLOCK_FAIL :
+            return MYRTOS_UNBLOCK_FAIL_S;
         default :
             return MYRTOS_SUCCESS_S;
     }

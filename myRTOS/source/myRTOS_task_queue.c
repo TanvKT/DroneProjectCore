@@ -154,6 +154,8 @@ myRTOS_return_type_e myrtos_push_blocked_task(myRTOS_int_task_type_s* t)
     //copy task to end of array
     if (!memcpy(t_i, t, sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
 
+    t_i->b_i = tasks->blocked.len;
+
     //incremement array values not using circular array values here
     tasks->blocked.len++;
 
@@ -208,6 +210,8 @@ myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s* t, size_t i
             sizeof(myRTOS_int_task_type_s)*(tasks->blocked.len - i - 1))) return MYRTOS_MEMCPY_FAIL;
     }
 
+    t->b_i = -1;
+
     //decrement length and return
     tasks->blocked.len--;
     return MYRTOS_SUCCESS;
@@ -246,6 +250,9 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     t_i->trig = 0;
     #endif
 
+    //all tasks start unblocked
+    t_i->b = false;
+    t_i->b_i = -1;
 
     //make sure stack size at least MINIUMUM
     t->stack_size = (t->stack_size < MYRTOS_MIN_STACK_SIZE) ? MYRTOS_MIN_STACK_SIZE : t->stack_size;

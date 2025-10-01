@@ -69,22 +69,131 @@ void myrtos_schedule(void)
         }
     }
 
-    s_curr_task_p = (myRTOS_int_task_type_s*)&s_curr_task;
-    ret = myrtos_request_task(s_curr_task_p);
-    if (ret == MYRTOS_TASK_QUEUE_EMPTY)
+    do
     {
-        //no tasks left to pull, swap to internal idle task at lowest priority
-        s_curr_task_p = &s_idle_task;
+        s_curr_task_p = (myRTOS_int_task_type_s*)&s_curr_task;
+        ret = myrtos_request_task(s_curr_task_p);
+        if (ret == MYRTOS_TASK_QUEUE_EMPTY)
+        {
+            //no tasks left to pull, swap to internal idle task at lowest priority
+            s_curr_task_p = &s_idle_task;
+            break;
+        }
+        //failed task request
+        else if (ret != MYRTOS_SUCCESS)
+        {
+            printf("FATAL:TASK REQUEST FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
+            s_curr_task_p = &s_idle_task;
+            s_fatal = true;
+            break;
+        }
+        else if (s_curr_task.b) //task is blocked, add to blocked list
+        {
+            myrtos_push_blocked_task(s_curr_task_p);
+        }
     }
-    //failed task request
-    else if (ret != MYRTOS_SUCCESS)
-    {
-        printf("FATAL:TASK REQUEST FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
-        s_curr_task_p = &s_idle_task;
-        s_fatal = true;
-    }
+    while(!s_curr_task.b);
 
     myrtos_hal_enable_interrupts();
+}
+
+/**
+ * @brief Block and unblock functionality to be used by locks
+ * 
+ *          We don't actually remove the task from the queue here, that will be done if it is pulled by the scheduler
+ *          This avoid unecessarily complex computation by only pulling tasks from the queues if they are being blocked for
+ *                  long periods of time
+ *          Unblocking the task needs to check if it is in the blocked list, if it is, then it needs to be removed and placed
+ *                  back in the queues
+ * 
+ * @param t task to block
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_s* t)
+{
+    t->b = true;
+    return MYRTOS_SUCCESS;
+}
+myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_s* t)
+{
+    myRTOS_int_task_type_s t_i;
+    
+    if (t->b_i != -1)
+    {
+        if (myrtos_rem_blocked_task(&t_i, t->b_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
+        if (myrtos_push_task(&t_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
+    }
+    t->b = false;
+
+    return MYRTOS_SUCCESS;
+}
+
+/**
+ * @brief WARNING: This function is only for testing purposes and is not mean't to be used
+ *                      during actual scheduler
+ *                  If you want to halt the scheduler there are other functions to do that:
+ *                      -> Set the fatal flag
+ *                      -> Disable interrupts
+ *                      -> Power off the system or call global reset
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_block_all()
+{
+    myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
+
+    for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
+    {
+        //skip if empty else iterate through all tasks and 
+        if (tasks->level[i].len == 0) continue;
+        size_t j = tasks->level[i].st;
+        while (j != tasks->level[i].en)
+        {
+            tasks->level[i].arr[j].b = true;
+            j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
+        }
+    }
+
+    return MYRTOS_SUCCESS;
+}
+/**
+ * @brief WARNING: This function is only for testing purposes and is not mean't to be used
+ *                      during actual scheduler
+ *                 When tasks are blocked by another task the release of the contested resource will trigger
+ *                      the unblocking of all associated tasks, it is not required or adivsed to unblock manually
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_unblock_all()
+{
+    myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
+
+    //first iterate through all tasks that haven't been added to blocked queue
+    for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
+    {
+        //skip if empty else iterate through all tasks and 
+        if (tasks->level[i].len == 0) continue;
+        size_t j = tasks->level[i].st;
+        while (j != tasks->level[i].en)
+        {
+            tasks->level[i].arr[j].b = false;
+            j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
+        }
+    }
+
+    //now iterate through blocked queue
+    for (size_t i = 0; i < tasks->blocked.len; i++)
+    {
+        myRTOS_int_task_type_s t;
+        myRTOS_return_type_e ret;
+        ret = myrtos_rem_blocked_task(&t, i);
+        if (ret != MYRTOS_SUCCESS) return ret;
+        //make sure to push back to task queue
+        ret = myrtos_push_task(&t);
+        if (ret != MYRTOS_SUCCESS) return ret;
+    }
+
+    return MYRTOS_SUCCESS;
 }
 
 /**
@@ -123,6 +232,15 @@ static void myrtos_idle_task(void* args)
 {
     //infinite loop
     for (;;){};
+}
+/**
+ * @brief Testing function
+ * 
+ * @return myRTOS_int_task_type_s* 
+ */
+myRTOS_int_task_type_s* myrtos_get_idle_task()
+{
+    return &s_idle_task;
 }
 
 /**
