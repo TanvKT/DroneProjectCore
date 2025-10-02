@@ -18,9 +18,10 @@
 #include <stdlib.h>
 
 #ifdef      MYRTOS_ROUND_ROBIN
-#define     MYRTOS_TASK_SIZE           sizeof(myRTOS_task_queue_s) + (MYRTOS_MAX_TASKS * sizeof(myRTOS_int_task_type_s))    //total possible memory needed for task array
+#define     MYRTOS_TASK_SIZE                 MYRTOS_MAX_TASKS * sizeof(myRTOS_int_task_type_s)
+#define     MYRTOS_TASK_QUEUE_SIZE           sizeof(myRTOS_task_queue_s) + (MYRTOS_MAX_TASKS * sizeof(myRTOS_int_task_type_s*))    //total possible memory needed for task array
 #else
-#define     MYRTOS_TASK_SIZE           (MYRTOS_PRIORITY_LEVELS+1) * (sizeof(myRTOS_task_queue_s) + (MYRTOS_MAX_TASKS * sizeof(myRTOS_int_task_type_s)))
+#define     MYRTOS_TASK_QUEUE_SIZE           (MYRTOS_PRIORITY_LEVELS+1) * (sizeof(myRTOS_task_queue_s) + (MYRTOS_MAX_TASKS * sizeof(myRTOS_int_task_type_s*)))
 #endif
 
 
@@ -28,6 +29,7 @@
 myRTOS_return_type_e    myrtos_reset_memory();
 
 /* task arr */
+void*                   myrtos_get_task_queue_bp();
 void*                   myrtos_get_task_arr_bp();
 
 /* task stack */

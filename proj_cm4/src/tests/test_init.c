@@ -17,7 +17,9 @@
 void init_test()
 {
     TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(NULL, myrtos_get_heap_bp(), "Pointer to MYRTOS_HEAP is NULL");
-    TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(NULL, myrtos_get_task_arr_bp(), "Pointer to MYRTOS_STACK is NULL");
+    TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(NULL, myrtos_get_stack_bp, "Pointer to MYRTOS_STACK is NULL");
+    TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(NULL, myrtos_get_task_arr_bp(), "Pointer to MYRTOS_TASK_ARR is NULL");
+    TEST_ASSERT_NOT_EQUAL_size_t_MESSAGE(NULL, myrtos_get_task_queue_bp(), "Pointer to MYRTOS_TASK_QUEUE is NULL");
 
     //quick checks for some debug message variables, assuming if some work, all work
     TEST_ASSERT_EQUAL_STRING_MESSAGE("MYRTOS_MEMORY_LIMIT_REACHED", myrtos_debug_print(MYRTOS_MEMORY_LIMIT_REACHED), 

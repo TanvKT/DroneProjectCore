@@ -28,7 +28,8 @@
  *      The number of tasks possible is calculated using the minimum stack size for a task
  *      and the allocated stack space for those tasks
  */
-static myRTOS_queue_arr_s* tasks;
+static myRTOS_queue_arr_s* s_task_queue;
+static myRTOS_int_task_type_s* s_task_p;
 static size_t n_tasks = 0;
 
 /**
@@ -38,7 +39,21 @@ static size_t n_tasks = 0;
  */
 myRTOS_queue_arr_s* myrtos_get_task_queue()
 {
-    return tasks;
+    return s_task_queue;
+}
+
+/**
+ * @brief Initialize task array memory
+ * 
+ * @param p start address of task array block
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_init_task_arr(void* p)
+{
+    if (!p) return MYRTOS_MEMORY_INVALID;
+    s_task_p = (myRTOS_int_task_type_s*)p;
+    return MYRTOS_SUCCESS;
 }
 
 /**
@@ -49,17 +64,17 @@ myRTOS_queue_arr_s* myrtos_get_task_queue()
 myRTOS_return_type_e myrtos_init_task_queue(void* p)
 {
     if (!p) return MYRTOS_MEMORY_INVALID;
-    tasks = (myRTOS_queue_arr_s*)p;
+    s_task_queue = (myRTOS_queue_arr_s*)p;
     n_tasks = 0;
     
     for (uint8_t i=0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
-        tasks->level[i].len = 0; //current length
-        tasks->level[i].st  = 0; //current start index
-        tasks->level[i].en  = 0; //current end index
+        s_task_queue->level[i].len = 0; //current length
+        s_task_queue->level[i].st  = 0; //current start index
+        s_task_queue->level[i].en  = 0; //current end index
                                  //start and end index are used to allow circular array so that tasks don't need to be shifted down
     }
-    tasks->blocked.len = 0;
+    s_task_queue->blocked.len = 0;
 
     return MYRTOS_SUCCESS;
 }
@@ -71,17 +86,17 @@ myRTOS_return_type_e myrtos_init_task_queue(void* p)
  * @param t task pointer to copy to
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_s** t)
 {
     uint8_t i;
     for (i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
-        if (0 == tasks->level[i].len) continue;
+        if (0 == s_task_queue->level[i].len) continue;
 
         //not empty at this priority level, return and remove first task
-        if (!memcpy(t, &tasks->level[i].arr[tasks->level[i].st], sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
-        tasks->level[i].len--;
-        tasks->level[i].st = (MYRTOS_MAX_TASKS-1 == tasks->level[i].st) ? 0 : tasks->level[i].st+1;  //ensure within ciruclar bounds
+        *t = s_task_queue->level[i].arr[s_task_queue->level[i].st];
+        s_task_queue->level[i].len--;
+        s_task_queue->level[i].st = (MYRTOS_MAX_TASKS-1 == s_task_queue->level[i].st) ? 0 : s_task_queue->level[i].st+1;  //ensure within ciruclar bounds
         break;
     }
 
@@ -96,15 +111,15 @@ myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_s* t)
  * @param t task pointer to copy to
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s** t)
 {
     uint8_t i;
     for (i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
-        if (0 == tasks->level[i].len) continue;
+        if (0 == s_task_queue->level[i].len) continue;
 
         //not empty at this priority level, return first task
-        if (!memcpy(t, &tasks->level[i].arr[tasks->level[i].st], sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+        *t = s_task_queue->level[i].arr[s_task_queue->level[i].st];
         break;
     }
 
@@ -124,14 +139,11 @@ myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s* t)
  */
 myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
 {
-    myRTOS_int_task_type_s* t_i = &tasks->level[t->t.priority].arr[tasks->level[t->t.priority].en];
-
-    //copy task to end of array
-    if (!memcpy(t_i, t, sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    s_task_queue->level[t->t.priority].arr[s_task_queue->level[t->t.priority].en] = t;
 
     //incremement circular array values
-    tasks->level[t->t.priority].len++;
-    tasks->level[t->t.priority].en = (MYRTOS_MAX_TASKS-1 == tasks->level[t->t.priority].en) ? 0 : tasks->level[t->t.priority].en+1;
+    s_task_queue->level[t->t.priority].len++;
+    s_task_queue->level[t->t.priority].en = (MYRTOS_MAX_TASKS-1 == s_task_queue->level[t->t.priority].en) ? 0 : s_task_queue->level[t->t.priority].en+1;
 
     return MYRTOS_SUCCESS;
 }
@@ -144,20 +156,15 @@ myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
  */
 myRTOS_return_type_e myrtos_push_blocked_task(myRTOS_int_task_type_s* t)
 {
-    myRTOS_int_task_type_s* t_i;
+    if (MYRTOS_MAX_TASKS == s_task_queue->blocked.len) return MYRTOS_TASK_LIMIT_REACHED;  //a bit redundant here but leaving this check
 
-    if (MYRTOS_MAX_TASKS == tasks->blocked.len) return MYRTOS_TASK_LIMIT_REACHED;  //a bit redundant here but leaving this check
+    s_task_queue->blocked.arr[s_task_queue->blocked.len] = t;    //point to data at insert index of circular array 
+                                                                //  at given priority level
 
-    t_i = &tasks->blocked.arr[tasks->blocked.len]; //point to data at insert index of circular array 
-                                                  //  at given priority level
-
-    //copy task to end of array
-    if (!memcpy(t_i, t, sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
-
-    t_i->b_i = tasks->blocked.len;
+    t->b_i = s_task_queue->blocked.len;
 
     //incremement array values not using circular array values here
-    tasks->blocked.len++;
+    s_task_queue->blocked.len++;
 
     return MYRTOS_SUCCESS;
 }
@@ -169,7 +176,7 @@ myRTOS_return_type_e myrtos_push_blocked_task(myRTOS_int_task_type_s* t)
  */
 myRTOS_task_queue_s* myrtos_get_blocked_list_ptr()
 {
-    return &tasks->blocked;
+    return &s_task_queue->blocked;
 }
 
 /**
@@ -184,8 +191,8 @@ size_t myrtos_get_blocked_list_cpy(myRTOS_int_task_type_s* l, size_t n)
     size_t i;
     for (i = 0; i < n; i++)
     {
-        if (tasks->blocked.len == i) return i;
-        if (!memcpy(l, &tasks->blocked.arr[i], sizeof(myRTOS_int_task_type_s))) return i;
+        if (s_task_queue->blocked.len == i) return i;
+        if (!memcpy(l, s_task_queue->blocked.arr[i], sizeof(myRTOS_int_task_type_s))) return i;
     }
     return n;
 }
@@ -197,23 +204,23 @@ size_t myrtos_get_blocked_list_cpy(myRTOS_int_task_type_s* l, size_t n)
  * @param i index to remove at
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s* t, size_t i)
+myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s** t, size_t i)
 {
-    if (tasks->blocked.len <= i) return MYRTOS_FAIL;
+    if (s_task_queue->blocked.len <= i) return MYRTOS_FAIL;
 
-    if (!memcpy(t, &tasks->blocked.arr[i], sizeof(myRTOS_int_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    *t = s_task_queue->blocked.arr[i];
 
     //shift array down at index if needed
-    if (((tasks->blocked.len-1) != i) || (1 == tasks->blocked.len))
+    if (((s_task_queue->blocked.len-1) != i) && (s_task_queue->blocked.len != 1))
     {
-        if (!memcpy(&tasks->blocked.arr[i], &tasks->blocked.arr[i+1], 
-            sizeof(myRTOS_int_task_type_s)*(tasks->blocked.len - i - 1))) return MYRTOS_MEMCPY_FAIL;
+        if (!memcpy(&s_task_queue->blocked.arr[i], &s_task_queue->blocked.arr[i+1], 
+            sizeof(myRTOS_int_task_type_s*)*(s_task_queue->blocked.len - i - 1))) return MYRTOS_MEMCPY_FAIL;
     }
 
-    t->b_i = -1;
+    (*t)->b_i = -1;
 
     //decrement length and return
-    tasks->blocked.len--;
+    s_task_queue->blocked.len--;
     return MYRTOS_SUCCESS;
 }
 
@@ -241,12 +248,13 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
 
     //ensure valid priority
     t->priority = (t->priority >= MYRTOS_QUEUE_ARR_LEN) ? MYRTOS_QUEUE_ARR_LEN-1 : t->priority;
-    t_i = &tasks->level[t->priority].arr[tasks->level[t->priority].en]; //point to data at insert index of circular array 
-                                                                        //  at given priority level
+    t_i = s_task_p;
+    s_task_queue->level[t->priority].arr[s_task_queue->level[t->priority].en] = t_i; //point to data at insert index of circular array 
+                                                                                     //  at given priority level
 
-    #ifdef MYRTOS_DYNAMIC_PRIORITY
-    //if we are using dynamic priority, we need to record original priority in a seperate field
     t_i->o_prio = t->priority;
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    //if we are using dynamic priority, we need to record trigger number
     t_i->trig = 0;
     #endif
 
@@ -270,10 +278,11 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     if (!myrtos_hal_stack_setup(t_i)) return MYRTOS_FAIL;
 
     //incremement circular array values
-    tasks->level[t->priority].len++;
-    tasks->level[t->priority].en = (MYRTOS_MAX_TASKS-1 == tasks->level[t->priority].en) ? 0 : tasks->level[t->priority].en+1;
+    s_task_queue->level[t->priority].len++;
+    s_task_queue->level[t->priority].en = (MYRTOS_MAX_TASKS-1 == s_task_queue->level[t->priority].en) ? 0 : s_task_queue->level[t->priority].en+1;
 
     n_tasks++;
+    s_task_p++;
     return MYRTOS_SUCCESS;
 }
 

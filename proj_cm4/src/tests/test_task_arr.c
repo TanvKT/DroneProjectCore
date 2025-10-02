@@ -28,7 +28,7 @@ void task_array_test()
 
     /* Test initialization of task array */
     tasks = myrtos_get_task_queue();
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(myrtos_get_task_arr_bp(), tasks, "Value of task queue pointer not equal to start of memory region");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(myrtos_get_task_queue_bp(), tasks, "Value of task queue pointer not equal to start of memory region");
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         printf("Priority Level [%d/%d]\r\n", i, MYRTOS_QUEUE_ARR_LEN-1);
@@ -43,9 +43,9 @@ void task_array_test()
     ret = myrtos_register_task_i(&t1);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[0].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[0].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[0].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[0]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[0]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[0]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
@@ -66,16 +66,16 @@ void task_array_test()
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     #ifdef MYRTOS_ROUND_ROBIN
-    TEST_ASSERT_EQUAL_STRING("t2", tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1].t.name);
-    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t2", tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[1]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(2, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].st);
     TEST_ASSERT_EQUAL_size_t(2, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].en);
     #else
-    TEST_ASSERT_EQUAL_STRING("t2", tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0].t.name);
-    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t2", tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].en);
@@ -95,16 +95,16 @@ void task_array_test()
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     #ifdef MYRTOS_ROUND_ROBIN
-    TEST_ASSERT_EQUAL_STRING("t3", tasks->level[0].arr[2].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[2].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[2].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t3", tasks->level[0].arr[2]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[2]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[2]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(3, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(3, tasks->level[0].en);
     #else
-    TEST_ASSERT_EQUAL_STRING("t3", tasks->level[0].arr[1].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[1].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[1].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t3", tasks->level[0].arr[1]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[1]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[1]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(2, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(2, tasks->level[0].en);
@@ -127,16 +127,16 @@ void task_array_test()
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     #ifdef MYRTOS_ROUND_ROBIN
-    TEST_ASSERT_EQUAL_STRING("t4", tasks->level[0].arr[3].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[3].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[3].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t4", tasks->level[0].arr[3]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[3]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[0].arr[3]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(4, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(4, tasks->level[0].en);
     #else
-    TEST_ASSERT_EQUAL_STRING("t4", tasks->level[4].arr[0].t.name);
-    TEST_ASSERT_EQUAL_UINT8(4, tasks->level[4].arr[0].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[4].arr[0].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t4", tasks->level[4].arr[0]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(4, tasks->level[4].arr[0]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, tasks->level[4].arr[0]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[4].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[4].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[4].en);
@@ -160,15 +160,15 @@ void task_array_test()
     //test stack pointers
     void* sp = myrtos_get_stack_bp();
     #ifdef MYRTOS_ROUND_ROBIN
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE,    tasks->level[0].arr[0].sp,                        "Task1 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2,  tasks->level[0].arr[1].sp,                        "Task2 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8,  tasks->level[0].arr[2].sp,                        "Task3 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->level[0].arr[3].sp,                        "Task4 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE,    tasks->level[0].arr[0]->sp,                        "Task1 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2,  tasks->level[0].arr[1]->sp,                        "Task2 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8,  tasks->level[0].arr[2]->sp,                        "Task3 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->level[0].arr[3]->sp,                        "Task4 PTR didn't match");
     #else
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE,    tasks->level[0].arr[0].sp,                        "Task1 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2,  tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0].sp,   "Task2 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8,  tasks->level[0].arr[1].sp,                        "Task3 PTR didn't match");
-    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->level[4].arr[0].sp,                        "Task4 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE,    tasks->level[0].arr[0]->sp,                        "Task1 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*2,  tasks->level[MYRTOS_QUEUE_ARR_LEN-1].arr[0]->sp,   "Task2 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*8,  tasks->level[0].arr[1]->sp,                        "Task3 PTR didn't match");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*14, tasks->level[4].arr[0]->sp,                        "Task4 PTR didn't match");
     #endif
 
     //test allocating with too large of stack size
@@ -209,16 +209,16 @@ void task_array_test()
     //just checking value of new task added
     //at this point we have tested that the array doesn't get modified incorrectly
     #ifdef MYRTOS_ROUND_ROBIN
-    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[4].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[4].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[4].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[4]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[4]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[4]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(5, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(5, tasks->level[0].en);
     #else
-    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[2].t.name);
-    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[2].t.priority);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[2].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t1", tasks->level[0].arr[2]->t.name);
+    TEST_ASSERT_EQUAL_UINT8(0, tasks->level[0].arr[2]->t.priority);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[2]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(3, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(3, tasks->level[0].en);
@@ -235,14 +235,14 @@ void task_array_test()
         ret = myrtos_register_task_i(&t1);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-        TEST_ASSERT_EQUAL_STRING_MESSAGE("t1", tasks->level[0].arr[i].t.name,                           "Name not matching within max allocate loop");
-        TEST_ASSERT_EQUAL_UINT8_MESSAGE(0, tasks->level[0].arr[i].t.priority,                           "Priority not matching within max allocate loop");
-        TEST_ASSERT_EQUAL_size_t_MESSAGE(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[i].t.stack_size,    "Stack Size not matching within max allocate loop");
-        TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*(i+1), tasks->level[0].arr[i].sp,      "Task PTR within max allocate loop didn't match");
+        TEST_ASSERT_EQUAL_STRING_MESSAGE("t1", tasks->level[0].arr[i]->t.name,                           "Name not matching within max allocate loop");
+        TEST_ASSERT_EQUAL_UINT8_MESSAGE(0, tasks->level[0].arr[i]->t.priority,                           "Priority not matching within max allocate loop");
+        TEST_ASSERT_EQUAL_size_t_MESSAGE(MYRTOS_MIN_STACK_SIZE, tasks->level[0].arr[i]->t.stack_size,    "Stack Size not matching within max allocate loop");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(sp + MYRTOS_MIN_STACK_SIZE*(i+1), tasks->level[0].arr[i]->sp,      "Task PTR within max allocate loop didn't match");
     }
     //ensure that memory at bounds does not exceed allocated stack block
     TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)myrtos_get_heap_bp(), (size_t)sp + MYRTOS_MIN_STACK_SIZE*MYRTOS_MAX_TASKS, "End of allocated stack block not pointing to start of heap");
-    TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)myrtos_get_heap_bp(), (size_t)tasks->level[0].arr[MYRTOS_MAX_TASKS-1].sp,  "Stack pointer for last task does not point to correct location");
+    TEST_ASSERT_LESS_THAN_size_t_MESSAGE((size_t)myrtos_get_heap_bp(), (size_t)tasks->level[0].arr[MYRTOS_MAX_TASKS-1]->sp,  "Stack pointer for last task does not point to correct location");
 
     //test allocating another task when full (testing different priority level as well for non Round Robin)
     uint8_t* sp_ui = (uint8_t*)sp;
@@ -277,12 +277,12 @@ void task_array_test()
 
     //test task removal
     //peek, shouldn't modify
-    myRTOS_int_task_type_s t_i;
+    myRTOS_int_task_type_s* t_i;
     ret = myrtos_peek_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
@@ -318,8 +318,8 @@ void task_array_test()
     ret = myrtos_request_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
@@ -352,8 +352,8 @@ void task_array_test()
     TEST_ASSERT_EQUAL_size_t(0, tasks->blocked.len);
 
     //test adding task again, should succeed (for non-round robin testing at different priority)
-    t_i.t = t2;
-    ret = myrtos_push_task(&t_i);
+    t_i->t = t2;
+    ret = myrtos_push_task(t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
 
@@ -387,8 +387,8 @@ void task_array_test()
         ret = myrtos_request_task(&t_i);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-        TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
-        TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+        TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
+        TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
         TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-(i+1), tasks->level[0].len);
         TEST_ASSERT_EQUAL_size_t((i+2 == MYRTOS_MAX_TASKS) ? 0 : i+2, tasks->level[0].st);
         TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
@@ -396,8 +396,8 @@ void task_array_test()
     ret = myrtos_request_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t2", t_i.t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t2", t_i->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
@@ -410,8 +410,8 @@ void task_array_test()
         ret = myrtos_request_task(&t_i);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-        TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
-        TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+        TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
+        TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
         TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-(i+2), tasks->level[0].len);
         TEST_ASSERT_EQUAL_size_t((i+2 == MYRTOS_MAX_TASKS) ? 0 : i+2, tasks->level[0].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
@@ -419,8 +419,8 @@ void task_array_test()
     ret = myrtos_request_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t2", t_i.t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i.t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t2", t_i->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, t_i->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].len);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].st);
     TEST_ASSERT_EQUAL_size_t(1, tasks->level[MYRTOS_QUEUE_ARR_LEN-1].en);
@@ -481,9 +481,9 @@ void task_array_test()
     ret = myrtos_push_blocked_task(&t1_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0].t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, blocked->arr[0].t.stack_size);
-    TEST_ASSERT_EQUAL_UINT8(0, blocked->arr[0].t.priority);
+    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0]->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, blocked->arr[0]->t.stack_size);
+    TEST_ASSERT_EQUAL_UINT8(0, blocked->arr[0]->t.priority);
     TEST_ASSERT_EQUAL_size_t(1, blocked->len);
 
     //nothing else should be modified
@@ -503,21 +503,21 @@ void task_array_test()
     ret = myrtos_push_blocked_task(&t2_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t2", blocked->arr[1].t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, blocked->arr[1].t.stack_size);
-    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, blocked->arr[1].t.priority);
+    TEST_ASSERT_EQUAL_STRING("t2", blocked->arr[1]->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, blocked->arr[1]->t.stack_size);
+    TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, blocked->arr[1]->t.priority);
     TEST_ASSERT_EQUAL_size_t(2, blocked->len);
     ret = myrtos_push_blocked_task(&t3_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[2].t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, blocked->arr[2].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[2]->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, blocked->arr[2]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(3, blocked->len);
     ret = myrtos_push_blocked_task(&t4_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[3].t.name);
-    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, blocked->arr[3].t.stack_size);
+    TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[3]->t.name);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, blocked->arr[3]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(4, blocked->len);
 
     //nothing else should be modified
@@ -571,10 +571,10 @@ void task_array_test()
     ret = myrtos_rem_blocked_task(&t_i, 1);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t2", t_i.t.name);
-    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0].t.name);
-    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[1].t.name);
-    TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[2].t.name);
+    TEST_ASSERT_EQUAL_STRING("t2", t_i->t.name);
+    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0]->t.name);
+    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[1]->t.name);
+    TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[2]->t.name);
     TEST_ASSERT_EQUAL_size_t(3, blocked->len);
     //nothing else should be modified
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
@@ -593,9 +593,9 @@ void task_array_test()
     ret = myrtos_rem_blocked_task(&t_i, 2);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t4", t_i.t.name);
-    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0].t.name);
-    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[1].t.name);
+    TEST_ASSERT_EQUAL_STRING("t4", t_i->t.name);
+    TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0]->t.name);
+    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[1]->t.name);
     TEST_ASSERT_EQUAL_size_t(2, blocked->len);
     //nothing else should be modified
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
@@ -614,8 +614,8 @@ void task_array_test()
     ret = myrtos_rem_blocked_task(&t_i, 0);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
-    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[0].t.name);
+    TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
+    TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[0]->t.name);
     TEST_ASSERT_EQUAL_size_t(1, blocked->len);
     //nothing else should be modified
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
@@ -634,7 +634,7 @@ void task_array_test()
     ret = myrtos_rem_blocked_task(&t_i, 0);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    TEST_ASSERT_EQUAL_STRING("t3", t_i.t.name);
+    TEST_ASSERT_EQUAL_STRING("t3", t_i->t.name);
     TEST_ASSERT_EQUAL_size_t(0, blocked->len);
     //nothing else should be modified
     TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
@@ -658,7 +658,7 @@ void task_array_test()
         ret = myrtos_push_blocked_task(&t1_i);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-        TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[i].t.name);
+        TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[i]->t.name);
         TEST_ASSERT_EQUAL_size_t(i+1, blocked->len);
     }
     //nothing else should be modified
@@ -701,7 +701,7 @@ void task_array_test()
         ret = myrtos_rem_blocked_task(&t_i, 0);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-        TEST_ASSERT_EQUAL_STRING("t1", t_i.t.name);
+        TEST_ASSERT_EQUAL_STRING("t1", t_i->t.name);
         TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS - i - 1, blocked->len);
     }
     //nothing else should be modified

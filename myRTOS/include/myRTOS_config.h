@@ -42,7 +42,7 @@
 #define     MYRTOS_TASK_TIMER_FREQ     1000000u                         //These numbers result in a 1ms period
 
 /* MEMORY */
-#define     MYRTOS_USE_LINKER                                           //IMPORTANT : comment line this out if not using linker
+//#define     MYRTOS_USE_LINKER                                           //IMPORTANT : comment line this out if not using linker
                                                                         //  Part of the setup for this library involves including the linker file myRTOS.ld
                                                                         //      within the linker script for each project after the .bss sections (INCLUDE myRTOS.ld)
                                                                         //  The LDFLAGS tag in the Makefile must also be modified to LDFLAGS+=-L{path_to_myRTOS}

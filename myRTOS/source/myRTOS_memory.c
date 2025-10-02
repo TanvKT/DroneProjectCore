@@ -19,7 +19,7 @@
 /* grab allocated memory regions ensuring 8-bit alignment */
 #ifdef MYRTOS_USE_LINKER
 __attribute__((aligned(8), section(".myrtos_tasks")))
-static uint8_t tasks_arr[MYRTOS_TASK_SIZE + 1];
+static uint8_t tasks_arr[MYRTOS_TASK_QUEUE_SIZE + 1];
 
 __attribute__((aligned(8), section(".myrtos_stacks")))
 static uint8_t stacks_arr[MYRTOS_STACK_SIZE + 1];
@@ -27,15 +27,26 @@ static uint8_t stacks_arr[MYRTOS_STACK_SIZE + 1];
 __attribute__((aligned(8), section(".myrtos_heap")))
 static uint8_t heap_arr[MYRTOS_HEAP_SIZE + 1];
 #else
-static uint8_t tasks_arr[MYRTOS_TASK_SIZE + 1] __attribute__((aligned(8)));
-static uint8_t stacks_arr[MYRTOS_STACK_SIZE + 1] __attribute__((aligned(8)));
-static uint8_t heap_arr[MYRTOS_HEAP_SIZE + 1] __attribute__((aligned(8)));
+static uint8_t tasks_arr        [MYRTOS_TASK_SIZE + 1]          __attribute__((aligned(8)));
+static uint8_t tasks_queue_arr  [MYRTOS_TASK_QUEUE_SIZE + 1]    __attribute__((aligned(8)));
+static uint8_t stacks_arr       [MYRTOS_STACK_SIZE + 1]         __attribute__((aligned(8)));
+static uint8_t heap_arr         [MYRTOS_HEAP_SIZE + 1]          __attribute__((aligned(8)));
 #endif
 
 /* static stack pointer to start of next allocatable block of stack */
 static size_t s_off_p = 0;
 /* static pointer to beginning of stack memory */
 static uint8_t* stack_start = &stacks_arr[0];
+
+/**
+ * @brief Get the task queue base pointer
+ * 
+ * @return void* pointer to base of task arr
+ */
+void* myrtos_get_task_queue_bp()
+{
+    return &tasks_queue_arr[0];
+}
 
 /**
  * @brief Get the task arr base pointer
@@ -103,9 +114,10 @@ myRTOS_return_type_e myrtos_reset_memory()
     if (NULL == stack_start || NULL == &tasks_arr[0] || NULL == &heap_arr[0]) return MYRTOS_MEMINIT_FAIL;
 
     //zeroize
-    if (!memset(stack_start, 0, sizeof(uint8_t)*(MYRTOS_STACK_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
-    if (!memset(&tasks_arr[0], 0, sizeof(uint8_t)*(MYRTOS_TASK_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
-    if (!memset(&heap_arr[0], 0, sizeof(uint8_t)*(MYRTOS_HEAP_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
+    if (!memset(stack_start,            0, sizeof(uint8_t)*(MYRTOS_STACK_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
+    if (!memset(&tasks_arr[0],          0, sizeof(uint8_t)*(MYRTOS_TASK_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
+    if (!memset(&tasks_queue_arr[0],    0, sizeof(uint8_t)*(MYRTOS_TASK_QUEUE_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
+    if (!memset(&heap_arr[0],           0, sizeof(uint8_t)*(MYRTOS_HEAP_SIZE-1))) return MYRTOS_MEMINIT_FAIL;
 
     return MYRTOS_SUCCESS;
 }

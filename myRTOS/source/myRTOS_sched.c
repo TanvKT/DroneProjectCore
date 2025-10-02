@@ -72,7 +72,7 @@ void myrtos_schedule(void)
     do
     {
         s_curr_task_p = (myRTOS_int_task_type_s*)&s_curr_task;
-        ret = myrtos_request_task(s_curr_task_p);
+        ret = myrtos_request_task(&s_curr_task_p);
         if (ret == MYRTOS_TASK_QUEUE_EMPTY)
         {
             //no tasks left to pull, swap to internal idle task at lowest priority
@@ -115,13 +115,11 @@ myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_s* t)
     return MYRTOS_SUCCESS;
 }
 myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_s* t)
-{
-    myRTOS_int_task_type_s t_i;
-    
+{    
     if (t->b_i != -1)
     {
-        if (myrtos_rem_blocked_task(&t_i, t->b_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
-        if (myrtos_push_task(&t_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
+        if (myrtos_rem_blocked_task(&t, t->b_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
+        if (myrtos_push_task(t) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
     }
     t->b = false;
 
@@ -145,11 +143,11 @@ myRTOS_return_type_e myrtos_block_all()
     for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
     {
         //skip if empty else iterate through all tasks and 
-        if (tasks->level[i].len == 0) continue;
+        if (0 == tasks->level[i].len) continue;
         size_t j = tasks->level[i].st;
         while (j != tasks->level[i].en)
         {
-            tasks->level[i].arr[j].b = true;
+            tasks->level[i].arr[j]->b = true;
             j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
         }
     }
@@ -172,11 +170,11 @@ myRTOS_return_type_e myrtos_unblock_all()
     for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
     {
         //skip if empty else iterate through all tasks and 
-        if (tasks->level[i].len == 0) continue;
+        if (0 == tasks->level[i].len) continue;
         size_t j = tasks->level[i].st;
         while (j != tasks->level[i].en)
         {
-            tasks->level[i].arr[j].b = false;
+            tasks->level[i].arr[j]->b = false;
             j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
         }
     }
@@ -184,12 +182,12 @@ myRTOS_return_type_e myrtos_unblock_all()
     //now iterate through blocked queue
     for (size_t i = 0; i < tasks->blocked.len; i++)
     {
-        myRTOS_int_task_type_s t;
+        myRTOS_int_task_type_s* t;
         myRTOS_return_type_e ret;
         ret = myrtos_rem_blocked_task(&t, i);
         if (ret != MYRTOS_SUCCESS) return ret;
         //make sure to push back to task queue
-        ret = myrtos_push_task(&t);
+        ret = myrtos_push_task(t);
         if (ret != MYRTOS_SUCCESS) return ret;
     }
 

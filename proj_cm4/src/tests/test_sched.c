@@ -69,10 +69,10 @@ void sched_test()
 
     //block a couple tasks
     myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
-    myRTOS_int_task_type_s* t1 =  &tasks->level[0].arr[0];
-    myRTOS_int_task_type_s* t4 =  &tasks->level[0].arr[3];
-    myRTOS_int_task_type_s* t8 =  &tasks->level[0].arr[7];
-    myRTOS_int_task_type_s* t12 = &tasks->level[0].arr[11];
+    myRTOS_int_task_type_s* t1 =  tasks->level[0].arr[0];
+    myRTOS_int_task_type_s* t4 =  tasks->level[0].arr[3];
+    myRTOS_int_task_type_s* t8 =  tasks->level[0].arr[7];
+    myRTOS_int_task_type_s* t12 = tasks->level[0].arr[11];
 
     ret = myrtos_block_task(t1);
     sprintf(str, myrtos_debug_print(ret));
@@ -127,5 +127,5 @@ void sched_test()
     }
 
     //unblock some tasks
-    
+
 }

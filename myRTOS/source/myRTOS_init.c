@@ -47,11 +47,18 @@ myRTOS_return_type_e myrtos_reset()
     printf("---------MYRTOS HEAP INITIALIZED---------\r\n");
     #endif
 
-    //grab the base pointer of the task management array
-    my_ret = myrtos_init_task_queue(myrtos_get_task_arr_bp());
+    //grab the base pointer of the task memory holding array
+    my_ret = myrtos_init_task_arr(myrtos_get_task_arr_bp());
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
     #if MYRTOS_DEBUG_MODE
     printf("------MYRTOS TASK ARRAY INITIALIZED------\r\n");
+    #endif
+
+    //grab the base pointer of the task management array
+    my_ret = myrtos_init_task_queue(myrtos_get_task_queue_bp());
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
+    #if MYRTOS_DEBUG_MODE
+    printf("------MYRTOS TASK QUEUE INITIALIZED------\r\n");
     #endif
 
     #if MYRTOS_DEBUG_MODE
