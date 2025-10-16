@@ -70,7 +70,9 @@ typedef struct MYRTOS_INT_TASK_TYPE_S {
     void* sp;               //stack pointer (This needs to be first element so memory addressing is consistent)
     size_t b_i;             //index in blocked list (set to -1(max val) when not in blocked list)
     myRTOS_task_type_s t;   //task
+    #ifndef MYRTOS_ROUND_ROBIN
     uint8_t o_prio;         //original priority
+    #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
     uint8_t trig;           //number of times full time slice used
     #endif

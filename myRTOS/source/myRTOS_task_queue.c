@@ -139,6 +139,14 @@ myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s** t)
  */
 myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
 {
+    //ensure priority set to original priority and trigger count set to 0
+    #ifndef MYRTOS_ROUND_ROBIN
+    t->t.priority = t->o_prio;
+    #endif
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    t->trig = 0;
+    #endif
+
     s_task_queue->level[t->t.priority].arr[s_task_queue->level[t->t.priority].en] = t;
 
     //incremement circular array values
@@ -251,8 +259,14 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     t_i = s_task_p;
     s_task_queue->level[t->priority].arr[s_task_queue->level[t->priority].en] = t_i; //point to data at insert index of circular array 
                                                                                      //  at given priority level
-
+    //need to ensure that we record original priority
+    //when a task is using a resource that a higher priority task is using
+    //      it must increase its priority to the priority value of the task that is waiting on it
+    //if using dynamic priority, we need to lower the priority of tasks that are
+    //      consuming too many time slices in sequence
+    #ifndef MYRTOS_ROUND_ROBIN
     t_i->o_prio = t->priority;
+    #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
     //if we are using dynamic priority, we need to record trigger number
     t_i->trig = 0;

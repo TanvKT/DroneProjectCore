@@ -50,7 +50,7 @@ void myrtos_schedule(void)
         #ifdef MYRTOS_DYNAMIC_PRIORITY
         //this task has used entire time slice, increment values
         s_curr_task.trig++;
-        if (s_curr_task.trig > MYRTOS_PRIO_LOWER_THRESH)
+        if (s_curr_task.trig >= MYRTOS_PRIO_LOWER_THRESH)
         {
             s_curr_task.trig = 0;
             s_curr_task.t.priority += (s_curr_task.t.priority < MYRTOS_PRIORITY_LEVELS) ? 1 : 0;
