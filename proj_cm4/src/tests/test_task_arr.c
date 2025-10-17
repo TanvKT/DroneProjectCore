@@ -351,8 +351,12 @@ void task_array_test()
     #endif
     TEST_ASSERT_EQUAL_size_t(0, tasks->blocked.len);
 
-    //test adding task again, should succeed (for non-round robin testing at different priority)
-    t_i->t = t2;
+    //test adding task again, should succeed (change priority for non round robin test)
+    t_i->t.name[1] = '2'; //change to t2
+    #ifndef MYRTOS_ROUND_ROBIN
+    t_i->t.priority = MYRTOS_PRIORITY_LEVELS - 1;
+    t_i->o_prio = MYRTOS_PRIORITY_LEVELS - 1;
+    #endif
     ret = myrtos_push_task(t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
@@ -473,12 +477,34 @@ void task_array_test()
     ret = myrtos_reset();
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
-    myRTOS_int_task_type_s t1_i = {.t = t1};
-    myRTOS_int_task_type_s t2_i = {.t = t2};
-    myRTOS_int_task_type_s t3_i = {.t = t3};
-    myRTOS_int_task_type_s t4_i = {.t = t4};
+
+    //register tasks
+    myrtos_register_task_i(&t1);
+    myrtos_register_task_i(&t2);
+    myrtos_register_task_i(&t3);
+    myrtos_register_task_i(&t4);
+
+    //pull tasks from queue
+    myrtos_request_task(&t_i);
+    myrtos_request_task(&t_i);
+    myrtos_request_task(&t_i);
+    myrtos_request_task(&t_i);  //assume if we got to this point that this works
+
+    //reset all queue values to zero just for testing purposes
+    for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
+    {
+        tasks->level[i].len = 0;
+        tasks->level[i].st = 0;
+        tasks->level[i].en = 0;
+    }
+
+    //grab pointers
+    myRTOS_int_task_type_s* t1_i = (myRTOS_int_task_type_s*)myrtos_get_task_arr_bp();
+    myRTOS_int_task_type_s* t2_i = t1_i + 1;
+    myRTOS_int_task_type_s* t3_i = t2_i + 1;
+    myRTOS_int_task_type_s* t4_i = t3_i + 1;
     myRTOS_task_queue_s* blocked = myrtos_get_blocked_list_ptr();
-    ret = myrtos_push_blocked_task(&t1_i);
+    ret = myrtos_push_blocked_task(t1_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[0]->t.name);
@@ -487,33 +513,28 @@ void task_array_test()
     TEST_ASSERT_EQUAL_size_t(1, blocked->len);
 
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //test adding a few tasks
-    ret = myrtos_push_blocked_task(&t2_i);
+    ret = myrtos_push_blocked_task(t2_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     TEST_ASSERT_EQUAL_STRING("t2", blocked->arr[1]->t.name);
     TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE, blocked->arr[1]->t.stack_size);
     TEST_ASSERT_EQUAL_UINT8(MYRTOS_QUEUE_ARR_LEN-1, blocked->arr[1]->t.priority);
     TEST_ASSERT_EQUAL_size_t(2, blocked->len);
-    ret = myrtos_push_blocked_task(&t3_i);
+    ret = myrtos_push_blocked_task(t3_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[2]->t.name);
     TEST_ASSERT_EQUAL_size_t(MYRTOS_MIN_STACK_SIZE*6, blocked->arr[2]->t.stack_size);
     TEST_ASSERT_EQUAL_size_t(3, blocked->len);
-    ret = myrtos_push_blocked_task(&t4_i);
+    ret = myrtos_push_blocked_task(t4_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[3]->t.name);
@@ -521,17 +542,12 @@ void task_array_test()
     TEST_ASSERT_EQUAL_size_t(4, blocked->len);
 
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove from invalid index
     ret = myrtos_rem_blocked_task(&t_i, 4);
@@ -539,33 +555,23 @@ void task_array_test()
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_FAIL, ret, str);
     TEST_ASSERT_EQUAL_size_t(4, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
     ret = myrtos_rem_blocked_task(&t_i, 7);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_FAIL, ret, str);
     TEST_ASSERT_EQUAL_size_t(4, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove from middle
     ret = myrtos_rem_blocked_task(&t_i, 1);
@@ -577,17 +583,12 @@ void task_array_test()
     TEST_ASSERT_EQUAL_STRING("t4", blocked->arr[2]->t.name);
     TEST_ASSERT_EQUAL_size_t(3, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove from end
     ret = myrtos_rem_blocked_task(&t_i, 2);
@@ -598,17 +599,12 @@ void task_array_test()
     TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[1]->t.name);
     TEST_ASSERT_EQUAL_size_t(2, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove from start
     ret = myrtos_rem_blocked_task(&t_i, 0);
@@ -618,17 +614,12 @@ void task_array_test()
     TEST_ASSERT_EQUAL_STRING("t3", blocked->arr[0]->t.name);
     TEST_ASSERT_EQUAL_size_t(1, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove last
     ret = myrtos_rem_blocked_task(&t_i, 0);
@@ -637,17 +628,12 @@ void task_array_test()
     TEST_ASSERT_EQUAL_STRING("t3", t_i->t.name);
     TEST_ASSERT_EQUAL_size_t(0, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //test filling blocked list
     printf("\n");
@@ -655,42 +641,32 @@ void task_array_test()
     {
         printf("Add Blocked Iteration: [%d/%d]\n", i, MYRTOS_MAX_TASKS - 1);
 
-        ret = myrtos_push_blocked_task(&t1_i);
+        ret = myrtos_push_blocked_task(t1_i);
         sprintf(str, myrtos_debug_print(ret));
         TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
         TEST_ASSERT_EQUAL_STRING("t1", blocked->arr[i]->t.name);
         TEST_ASSERT_EQUAL_size_t(i+1, blocked->len);
     }
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //shouldn't be able to add anything to blocked list
-    ret = myrtos_push_blocked_task(&t1_i);
+    ret = myrtos_push_blocked_task(t1_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_TASK_LIMIT_REACHED, ret, str);
     TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //remove all from blocked list
     printf("\n");
@@ -705,17 +681,12 @@ void task_array_test()
         TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS - i - 1, blocked->len);
     }
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 
     //should not be able to remove another task
     ret = myrtos_rem_blocked_task(&t_i, 0);
@@ -723,15 +694,10 @@ void task_array_test()
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_FAIL, ret, str);
     TEST_ASSERT_EQUAL_size_t(0, blocked->len);
     //nothing else should be modified
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
-    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
-    #ifndef MYRTOS_ROUND_ROBIN
     for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].len);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].st);
         TEST_ASSERT_EQUAL_size_t(0, tasks->level[i].en);
     }
-    #endif
 }

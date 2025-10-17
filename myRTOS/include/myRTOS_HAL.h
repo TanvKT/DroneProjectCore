@@ -27,14 +27,14 @@
  *          These are needed to set task scheduler interrupt priorities
  *          This is also needed to set stack pointers and save registers properly
  * 
- * @return int 
+ * @return int 0 if fail 1 if success
  */
-int         myrtos_hal_schedule_init(myRTOS_int_task_type_s* t);
-int         myrtos_hal_stack_setup(myRTOS_int_task_type_s* t);
-void        myrtos_hal_set_hard_isr(void);          //these functions are wrappers that are not declared inline
-void        myrtos_hal_enable_interrupts(void);     //relying on compiler to optimize these
-void        myrtos_hal_disable_interrupts(void);
-uint8_t     myrtos_hal_get_lowest_priority(void);
+int         myrtos_hal_schedule_init(myRTOS_int_task_type_s* t);    //Initialize scheduler (ISR flags, Stacks, etc..)
+int         myrtos_hal_stack_setup(myRTOS_int_task_type_s* t);      //Initialize stack data per task
+void        myrtos_hal_set_hardware_timer_flag(void);               //Set Hardware Timer Flag
+void        myrtos_hal_enable_interrupts(void);                     //enable global interrupts
+void        myrtos_hal_disable_interrupts(void);                    //disable global interrupts
+uint8_t     myrtos_hal_get_lowest_priority(void);                   //get lowest hardware priority
 
 /**
  * @brief Initialize UART on defined RX and TX pins using defined baud rate
@@ -43,7 +43,7 @@ uint8_t     myrtos_hal_get_lowest_priority(void);
  *                - MYRTOS_UART_TX
  *                - MYRTOS_UART_RX
  * 
- * @return int -1 if fail
+ * @return int 0 if fail 1 if success
  */
 int myrtos_hal_uart_init();
 int myrtos_hal_uart_set_baud();
@@ -53,7 +53,7 @@ int myrtos_hal_uart_putc(uint32_t c);
 /**
  * @brief Delays processor for a set peroid of milliseconds
  * 
- * @return int 
+ * @return int 0 if fail 1 if success
  */
 int myrtos_hal_delay_ms(uint32_t ms);
 
@@ -64,7 +64,7 @@ int myrtos_hal_delay_ms(uint32_t ms);
  * 
  * 
  * 
- * @return int -1 if fail
+ * @return int 0 if fail 1 if success
  */
 typedef void (*myRTOS_callback_t)(void);
 int myrtos_hal_timer_init();

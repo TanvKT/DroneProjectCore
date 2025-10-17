@@ -97,7 +97,7 @@ CXXFLAGS=
 ASFLAGS=
 
 # Additional / custom linker flags.
-LDFLAGS+=-L../myRTOS
+LDFLAGS=
 
 # Additional / custom libraries to link in to the application.
 LDLIBS=

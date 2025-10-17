@@ -92,7 +92,7 @@ void myrtos_schedule(void)
             myrtos_push_blocked_task(s_curr_task_p);
         }
     }
-    while(!s_curr_task.b);
+    while(s_curr_task.b);
 
     myrtos_hal_enable_interrupts();
 }
@@ -116,6 +116,14 @@ myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_s* t)
 }
 myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_s* t)
 {    
+    //ensure priority set to original priority and trigger count set to 0
+    #ifndef MYRTOS_ROUND_ROBIN
+    t->t.priority = t->o_prio;
+    #endif
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    t->trig = 0;
+    #endif
+
     if (t->b_i != -1)
     {
         if (myrtos_rem_blocked_task(&t, t->b_i) != MYRTOS_SUCCESS) return MYRTOS_UNBLOCK_FAIL;
@@ -140,10 +148,10 @@ myRTOS_return_type_e myrtos_block_all()
 {
     myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
 
-    for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
+    for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         //skip if empty else iterate through all tasks and 
-        if (0 == tasks->level[i].len) continue;
+        if (!tasks->level[i].len) continue;
         size_t j = tasks->level[i].st;
         while (j != tasks->level[i].en)
         {
@@ -167,13 +175,21 @@ myRTOS_return_type_e myrtos_unblock_all()
     myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
 
     //first iterate through all tasks that haven't been added to blocked queue
-    for (uint8_t i = 0; i < MYRTOS_PRIORITY_LEVELS; i++)
+    for (uint8_t i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
     {
         //skip if empty else iterate through all tasks and 
-        if (0 == tasks->level[i].len) continue;
+        if (!tasks->level[i].len) continue;
         size_t j = tasks->level[i].st;
         while (j != tasks->level[i].en)
         {
+            //ensure priority set to original priority and trigger count set to 0
+            #ifndef MYRTOS_ROUND_ROBIN
+            tasks->level[i].arr[j]->t.priority = tasks->level[i].arr[j]->o_prio;
+            #endif
+            #ifdef MYRTOS_DYNAMIC_PRIORITY
+            tasks->level[i].arr[j]->trig = 0;
+            #endif
+
             tasks->level[i].arr[j]->b = false;
             j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
         }
@@ -184,6 +200,15 @@ myRTOS_return_type_e myrtos_unblock_all()
     {
         myRTOS_int_task_type_s* t;
         myRTOS_return_type_e ret;
+
+        //ensure priority set to original priority and trigger count set to 0
+        #ifndef MYRTOS_ROUND_ROBIN
+        t->t.priority = t->o_prio;
+        #endif
+        #ifdef MYRTOS_DYNAMIC_PRIORITY
+        t->trig = 0;
+        #endif
+
         ret = myrtos_rem_blocked_task(&t, i);
         if (ret != MYRTOS_SUCCESS) return ret;
         //make sure to push back to task queue
@@ -216,7 +241,7 @@ myRTOS_return_type_e myrtos_set_fatal()
  */
 static void myrtos_task_timer_isr(void)
 {
-    myrtos_hal_set_hard_isr();  //inline void with no overhead
+    myrtos_hal_set_hardware_timer_flag();  //set flag
 }
 
 /**
@@ -269,7 +294,7 @@ myRTOS_return_type_e myrtos_schedule_start()
     if (!myrtos_hal_timer_start())                              return MYRTOS_TIMER_INIT_FAIL;
 
     //set the interrupt to pending to start scheduling
-    myrtos_hal_set_hard_isr();
+    myrtos_hal_set_hardware_timer_flag();
 
     //hang here, this fucntion should not return
     for (;;){}

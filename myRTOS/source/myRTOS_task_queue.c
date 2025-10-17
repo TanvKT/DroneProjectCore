@@ -139,14 +139,6 @@ myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s** t)
  */
 myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
 {
-    //ensure priority set to original priority and trigger count set to 0
-    #ifndef MYRTOS_ROUND_ROBIN
-    t->t.priority = t->o_prio;
-    #endif
-    #ifdef MYRTOS_DYNAMIC_PRIORITY
-    t->trig = 0;
-    #endif
-
     s_task_queue->level[t->t.priority].arr[s_task_queue->level[t->t.priority].en] = t;
 
     //incremement circular array values

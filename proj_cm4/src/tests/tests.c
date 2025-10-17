@@ -48,5 +48,9 @@ int test_all()
     getchar();
     RUN_TEST(task_timer_test);
 
+    printf("Enter anything to start the scheduler test...\r\n");
+    getchar();
+    RUN_TEST(sched_test);
+
     return UNITY_END();
 }

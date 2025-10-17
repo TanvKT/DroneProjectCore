@@ -39,7 +39,7 @@ int myrtos_hal_schedule_init(myRTOS_int_task_type_s* t)
 
     //ensure the change to CONTROL is visible immediately
     __ISB();
-    return 0;
+    return 1;
 }
 int myrtos_hal_stack_setup(myRTOS_int_task_type_s* t)
 {
@@ -57,7 +57,7 @@ int myrtos_hal_stack_setup(myRTOS_int_task_type_s* t)
     for (int i = 0; i < 8; ++i) {
         *(--sp) = 0;
     }
-    return 0;
+    return 1;
 }
 
 /**
@@ -104,7 +104,7 @@ __attribute__((naked)) void PendSV_Handler(void)
         "BX    lr                      \n"
     );
 }
-void myrtos_hal_set_hard_isr(void)
+void myrtos_hal_set_hardware_timer_flag(void)
 {
     SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }

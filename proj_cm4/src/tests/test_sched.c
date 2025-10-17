@@ -66,7 +66,8 @@ void sched_test()
                      "t8", "t1", "t4", "t12", "t2", "t3", "t5", "t6", "t7", "t9", "t10", "t11", "t13", "t14", "t15", "t16",
                      "t8", "t1", "t4", "t12", "t2", "t3", "t5", "t6", "t7", "t9", "t10", "t11", "t13", "t14", "t15", "t16"};
     #define TEST4 80
-    #elif MYRTOS_PRIORITY_BASED
+    #endif
+    #ifdef MYRTOS_PRIORITY_BASED
     char* test1[] = {"t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
@@ -89,7 +90,8 @@ void sched_test()
                      "t1", "t12", "t2", "t3",
                      "t1", "t12", "t2", "t3"};
     #define TEST4 20
-    #else   //DYNAMIC_PRIORITY
+    #endif
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
     char* test1[] = {"t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
@@ -118,8 +120,11 @@ void sched_test()
     //test pulling tasks, functionality depends on current scheduler
     for (int i = 0; i < TEST1; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED 1 [%d/%d]\r\n", i, TEST1-1);
+        #endif
         myrtos_schedule();
-        TEST_ASSERT_EQUAL_STRING(s_curr_task_p->t.name, test1[TEST1]); //simply testing identifier name here as proxy for full task
+        TEST_ASSERT_EQUAL_STRING(test1[i], s_curr_task_p->t.name); //simply testing identifier name here as proxy for full task
     }
 
     //block a couple tasks
@@ -164,8 +169,11 @@ void sched_test()
     //run through scheduler again and make sure blocked tasks never returned
     for (int i = 0; i < TEST2; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED 2 [%d/%d]\r\n", i, TEST2-1);
+        #endif
         myrtos_schedule();
-        TEST_ASSERT_EQUAL_STRING(s_curr_task_p->t.name, test2[i]); //simply testing identifier name here as proxy for full task
+        TEST_ASSERT_EQUAL_STRING(test2[i], s_curr_task_p->t.name); //simply testing identifier name here as proxy for full task
     }
 
     //block all tasks
@@ -177,6 +185,9 @@ void sched_test()
     myRTOS_int_task_type_s* idle = myrtos_get_idle_task();
     for (int i = 0; i < 200; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED IDLE 1 [%d/%d]\r\n", i, 199);
+        #endif
         myrtos_schedule();
         TEST_ASSERT_EQUAL_PTR(idle, s_curr_task_p);
     }
@@ -206,8 +217,11 @@ void sched_test()
     // Ensure only scheduling those tasks
     for (int i = 0; i < TEST3; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED 3 [%d/%d]\r\n", i, TEST3-1);
+        #endif
         myrtos_schedule();
-        TEST_ASSERT_EQUAL_STRING(s_curr_task_p->t.name, test3[i]);
+        TEST_ASSERT_EQUAL_STRING(test3[i], s_curr_task_p->t.name);
     }
 
     // Unblock all
@@ -216,8 +230,25 @@ void sched_test()
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     for (int i = 0; i < TEST4; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED 4 [%d/%d]\r\n", i, TEST4-1);
+        #endif
         myrtos_schedule();
-        TEST_ASSERT_EQUAL_STRING(s_curr_task_p->t.name, test4[i]);
+        TEST_ASSERT_EQUAL_STRING(test4[i], s_curr_task_p->t.name);
+    }
+
+    //set fatal flag
+    ret = myrtos_set_fatal();
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    //running through scheduler now should only return the idle task
+    for (int i = 0; i < 200; i++)
+    {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED IDLE 2 [%d/%d]\r\n", i, 199);
+        #endif
+        myrtos_schedule();
+        TEST_ASSERT_EQUAL_PTR(idle, s_curr_task_p);
     }
 
     // Test done

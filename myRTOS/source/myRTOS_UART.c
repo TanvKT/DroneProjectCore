@@ -24,14 +24,11 @@ static myRTOS_mutex_handle_s s_myRTOS_uart_lock;
  */
 myRTOS_return_type_e myRTOS_uart_init()
 {
-    int hal_ret;
     myRTOS_return_type_e my_ret;
 
-    hal_ret = myrtos_hal_uart_init();
-    if (-1 == hal_ret) return MYRTOS_UART_INIT_FAIL;
+    if(!myrtos_hal_uart_init()) return MYRTOS_UART_INIT_FAIL;
     
-    hal_ret = myrtos_hal_uart_set_baud(MYRTOS_UART_BAUD);
-    if (-1 == hal_ret) return MYRTOS_UART_BAUD_FAIL;
+    if(!myrtos_hal_uart_set_baud(MYRTOS_UART_BAUD)) return MYRTOS_UART_BAUD_FAIL;
 
     my_ret = myrtos_mutex_init(&s_myRTOS_uart_lock);
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
