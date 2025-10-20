@@ -213,8 +213,11 @@ myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s** t, size_t 
     //shift array down at index if needed
     if (((s_task_queue->blocked.len-1) != i) && (s_task_queue->blocked.len != 1))
     {
-        if (!memcpy(&s_task_queue->blocked.arr[i], &s_task_queue->blocked.arr[i+1], 
-            sizeof(myRTOS_int_task_type_s*)*(s_task_queue->blocked.len - i - 1))) return MYRTOS_MEMCPY_FAIL;
+        for  (size_t j = i; j < s_task_queue->blocked.len - 1; j++)
+        {
+            s_task_queue->blocked.arr[j] = s_task_queue->blocked.arr[j+1];
+            s_task_queue->blocked.arr[j]->b_i--;
+        }
     }
 
     (*t)->b_i = -1;

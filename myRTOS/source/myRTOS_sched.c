@@ -16,7 +16,6 @@
 #include "myRTOS_HAL.h"
 #include <stdio.h>
 
-static volatile myRTOS_int_task_type_s  s_curr_task;
 static myRTOS_int_task_type_s           s_idle_task;
 myRTOS_int_task_type_s*                 s_curr_task_p = &s_idle_task;
 static uint8_t                          s_idle_task_stack_arr[128]; //hard coding stack size here since we don't need much at all
@@ -49,29 +48,44 @@ void myrtos_schedule(void)
     {
         #ifdef MYRTOS_DYNAMIC_PRIORITY
         //this task has used entire time slice, increment values
-        s_curr_task.trig++;
-        if (s_curr_task.trig >= MYRTOS_PRIO_LOWER_THRESH)
+        s_curr_task_p->trig++;
+        if (s_curr_task_p->trig >= MYRTOS_PRIO_LOWER_THRESH)
         {
-            s_curr_task.trig = 0;
-            s_curr_task.t.priority += (s_curr_task.t.priority < MYRTOS_PRIORITY_LEVELS) ? 1 : 0;
+            s_curr_task_p->trig = 0;
+            s_curr_task_p->t.priority += (s_curr_task_p->t.priority < MYRTOS_PRIORITY_LEVELS) ? 1 : 0;
         }
         #endif
 
-        //push task back onto queue
-        ret = myrtos_push_task(s_curr_task_p);
-        if (ret != MYRTOS_SUCCESS) 
+        //need to check if this task got blocked
+        if (s_curr_task_p->b)
         {
-            printf("FATAL:TASK PUSH FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
-            s_curr_task_p = &s_idle_task;
-            s_fatal = true;
-            myrtos_hal_enable_interrupts();
-            return;
+            ret = myrtos_push_blocked_task(s_curr_task_p);
+            if (ret != MYRTOS_SUCCESS) 
+            {
+                printf("FATAL:BLOCKED PUSH FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
+                s_curr_task_p = &s_idle_task;
+                s_fatal = true;
+                myrtos_hal_enable_interrupts();
+                return;
+            }
+        }
+        else
+        {
+            //push task back onto queue
+            ret = myrtos_push_task(s_curr_task_p);
+            if (ret != MYRTOS_SUCCESS) 
+            {
+                printf("FATAL:TASK PUSH FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
+                s_curr_task_p = &s_idle_task;
+                s_fatal = true;
+                myrtos_hal_enable_interrupts();
+                return;
+            }
         }
     }
 
     do
     {
-        s_curr_task_p = (myRTOS_int_task_type_s*)&s_curr_task;
         ret = myrtos_request_task(&s_curr_task_p);
         if (ret == MYRTOS_TASK_QUEUE_EMPTY)
         {
@@ -87,12 +101,20 @@ void myrtos_schedule(void)
             s_fatal = true;
             break;
         }
-        else if (s_curr_task.b) //task is blocked, add to blocked list
+        else if (s_curr_task_p->b) //task is blocked, add to blocked list
         {
-            myrtos_push_blocked_task(s_curr_task_p);
+            ret = myrtos_push_blocked_task(s_curr_task_p);
+            if (ret != MYRTOS_SUCCESS) 
+            {
+                printf("FATAL:BLOCKED PUSH FAILED DURING SCHEDULER CALL - %s\r\n", myrtos_debug_print(ret));
+                s_curr_task_p = &s_idle_task;
+                s_fatal = true;
+                myrtos_hal_enable_interrupts();
+                return;
+            }
         }
     }
-    while(s_curr_task.b);
+    while(s_curr_task_p->b);
 
     myrtos_hal_enable_interrupts();
 }
@@ -160,6 +182,12 @@ myRTOS_return_type_e myrtos_block_all()
         }
     }
 
+    //need to also ensure that current task is blocked
+    if (s_curr_task_p != &s_idle_task)
+    {
+        s_curr_task_p->b = true;
+    }
+
     return MYRTOS_SUCCESS;
 }
 /**
@@ -196,7 +224,7 @@ myRTOS_return_type_e myrtos_unblock_all()
     }
 
     //now iterate through blocked queue
-    for (size_t i = 0; i < tasks->blocked.len; i++)
+    while (tasks->blocked.len != 0)
     {
         myRTOS_int_task_type_s* t;
         myRTOS_return_type_e ret;
@@ -209,11 +237,18 @@ myRTOS_return_type_e myrtos_unblock_all()
         t->trig = 0;
         #endif
 
-        ret = myrtos_rem_blocked_task(&t, i);
+        ret = myrtos_rem_blocked_task(&t, 0);
         if (ret != MYRTOS_SUCCESS) return ret;
         //make sure to push back to task queue
+        t->b = false;
         ret = myrtos_push_task(t);
         if (ret != MYRTOS_SUCCESS) return ret;
+    }
+
+    //ensure that if not idle task, unblock current task
+    if (s_curr_task_p != &s_idle_task)
+    {
+        s_curr_task_p->b = false;
     }
 
     return MYRTOS_SUCCESS;
