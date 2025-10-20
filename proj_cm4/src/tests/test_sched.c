@@ -84,37 +84,37 @@ void sched_test()
                      "t1", "t12",
                      "t1", "t12"};
     #define TEST3 8
-    char* test4[] = {"t1", "t12", "t2", "t3",
-                     "t1", "t12", "t2", "t3",
-                     "t1", "t12", "t2", "t3",
-                     "t1", "t12", "t2", "t3",
-                     "t1", "t12", "t2", "t3"};
+    char* test4[] = {"t1", "t3", "t2", "t12",
+                     "t1", "t3", "t2", "t12",
+                     "t1", "t3", "t2", "t12",
+                     "t1", "t3", "t2", "t12",
+                     "t1", "t3", "t2", "t12"};
     #define TEST4 20
     #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
     char* test1[] = {"t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
                      "t1", "t2", "t3", "t12",
-                     "t1", "t2", "t3", "t12",
-                     "t4", "t5", "t16", "t1", "t2", "t3", "t12"}; //priority should lower here
-    #define TEST1 23
-    char* test2[] = {"t4", "t5", "t16", "t2", "t3",
-                     "t4", "t5", "t16", "t2", "t3",
-                     "t4", "t5", "t16", "t2", "t3",
-                     "t14", "t14", "t4", "t5", "t16", "t2", "t3"};
-    #define TEST2 22
+                     "t4", "t5", "t16", "t1", "t2", "t3", "t12", //priority should lower here
+                     "t4", "t5", "t16", "t1", "t2", "t3", "t12"}; 
+    #define TEST1 26
+    char* test2[] = {"t4", "t5", "t16", "t2", "t3",                           //t4 blocked, then unblocked
+                     "t4", "t4", "t14", "t15", "t5", "t16", "t2", "t3",       //should reset counter
+                     "t4", "t14", "t15", "t5", "t16", "t2", "t3",
+                     "t4", "t14", "t15", "t5", "t16", "t2", "t3"};
+    #define TEST2 27
     char* test3[] = {"t1", "t12", //priority should have been reset here
                      "t1", "t12",
-                     "t1", "t12",
-                     "t1", "t12"}; //priority lowers, but no other tasks avaliable
-    #define TEST3 4*2
-    char* test4[] = {"t2", "t3", //priority 0
-                     "t2", "t3",
-                     "t2", "t3",
-                     "t2", "t3",
-                     "t1", "t12", "t4", "t5", "t16", "t2", "t3", //priority 1
-                     "t1", "t12", "t4", "t5", "t16", "t2", "t3"};
-    #define TEST4 22
+                     "t1", "t12", //priority lowers
+                     "t4", "t1", "t12"}; 
+    #define TEST3 9
+    char* test4[] = {"t3", "t2", //priority 0
+                     "t3", "t2",
+                     "t3", "t2", //lowers here
+                     "t4", "t1", "t5", "t16", "t12", "t3", "t2", //priority 1
+                     "t4", "t1", "t5", "t16", "t12", "t3", "t2", //t1, t4, t12 lower
+                     "t5", "t16", "t3", "t2"};
+    #define TEST4 24
     #endif
 
     //test pulling tasks, functionality depends on current scheduler
@@ -129,10 +129,17 @@ void sched_test()
 
     //block a couple tasks
     myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
+    #ifdef MYRTOS_ROUND_ROBIN
     myRTOS_int_task_type_s* t1 =  tasks->level[0].arr[0];
     myRTOS_int_task_type_s* t4 =  tasks->level[0].arr[3];
     myRTOS_int_task_type_s* t8 =  tasks->level[0].arr[7];
     myRTOS_int_task_type_s* t12 = tasks->level[0].arr[11];
+    #else
+    myRTOS_int_task_type_s* t1 =  tasks->level[0].arr[0];
+    myRTOS_int_task_type_s* t4 =  tasks->level[1].arr[0];
+    myRTOS_int_task_type_s* t8 =  tasks->level[5].arr[1];
+    myRTOS_int_task_type_s* t12 = tasks->level[0].arr[3];
+    #endif
 
     ret = myrtos_block_task(t1);
     sprintf(str, myrtos_debug_print(ret));
@@ -199,6 +206,9 @@ void sched_test()
     //should only get this one task
     for (int i = 0; i < 200; i++)
     {
+        #ifdef MYRTOS_DEBUG_MODE
+        printf("SCHED T8 [%d/%d]\r\n", i, 199);
+        #endif
         myrtos_schedule();
         TEST_ASSERT_EQUAL_PTR(t8, s_curr_task_p);
     }

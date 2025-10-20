@@ -52,7 +52,7 @@ void myrtos_schedule(void)
         if (s_curr_task_p->trig >= MYRTOS_PRIO_LOWER_THRESH)
         {
             s_curr_task_p->trig = 0;
-            s_curr_task_p->t.priority += (s_curr_task_p->t.priority < MYRTOS_PRIORITY_LEVELS) ? 1 : 0;
+            s_curr_task_p->t.priority += (s_curr_task_p->t.priority < MYRTOS_PRIORITY_LEVELS-1) ? 1 : 0;
         }
         #endif
 
@@ -211,14 +211,17 @@ myRTOS_return_type_e myrtos_unblock_all()
         while (j != tasks->level[i].en)
         {
             //ensure priority set to original priority and trigger count set to 0
-            #ifndef MYRTOS_ROUND_ROBIN
-            tasks->level[i].arr[j]->t.priority = tasks->level[i].arr[j]->o_prio;
-            #endif
-            #ifdef MYRTOS_DYNAMIC_PRIORITY
-            tasks->level[i].arr[j]->trig = 0;
-            #endif
+            if (tasks->level[i].arr[j]->b)
+            {
+                #ifndef MYRTOS_ROUND_ROBIN
+                tasks->level[i].arr[j]->t.priority = tasks->level[i].arr[j]->o_prio;
+                #endif
+                #ifdef MYRTOS_DYNAMIC_PRIORITY
+                tasks->level[i].arr[j]->trig = 0;
+                #endif
 
-            tasks->level[i].arr[j]->b = false;
+                tasks->level[i].arr[j]->b = false;
+            }
             j = (MYRTOS_MAX_TASKS-1 == j) ? 0 : j+1;
         }
     }
@@ -229,6 +232,9 @@ myRTOS_return_type_e myrtos_unblock_all()
         myRTOS_int_task_type_s* t;
         myRTOS_return_type_e ret;
 
+        ret = myrtos_rem_blocked_task(&t, 0);
+        if (ret != MYRTOS_SUCCESS) return ret;
+        
         //ensure priority set to original priority and trigger count set to 0
         #ifndef MYRTOS_ROUND_ROBIN
         t->t.priority = t->o_prio;
@@ -237,8 +243,6 @@ myRTOS_return_type_e myrtos_unblock_all()
         t->trig = 0;
         #endif
 
-        ret = myrtos_rem_blocked_task(&t, 0);
-        if (ret != MYRTOS_SUCCESS) return ret;
         //make sure to push back to task queue
         t->b = false;
         ret = myrtos_push_task(t);

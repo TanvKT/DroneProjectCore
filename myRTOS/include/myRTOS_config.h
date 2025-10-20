@@ -59,10 +59,10 @@
 // Important note, only one of these can be uncommented at once
 // Failure to comply will result in unforseen consequences
 
-#define     MYRTOS_ROUND_ROBIN                                          //MYRTOS_ROUND_ROBIN       -       Every task is allotted equal CPU time
-//#define     MYRTOS_PRIORITY_BASED                                       //MYRTOS_PRIORITY_BASED    -       Tasks of higher priority will get more CPU time
-                                                                        //                                      If two tasks have the same priority, round robin is used
-//#define     MYRTOS_DYNAMIC_PRIORITY                                     //MYRTOS_DYNAMIC_PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
+//#define     MYRTOS_ROUND_ROBIN         1                                   //MYRTOS_ROUND_ROBIN       -       Every task is allotted equal CPU time
+//#define     MYRTOS_PRIORITY_BASED      1                                   //MYRTOS_PRIORITY_BASED    -       Tasks of higher priority will get more CPU time
+                                                                           //                                      If two tasks have the same priority, round robin is used
+#define     MYRTOS_DYNAMIC_PRIORITY    1                                   //MYRTOS_DYNAMIC_PRIORITY  -       Tasks taking larger chunks of slice will have their priority lowered
 
 #define     MYRTOS_PRIORITY_LEVELS     7                                //default to 7 levels of priority (0 - 6) anything larger is truncated down
                                                                         //          (NOT USED IF ROUND_ROBIN)
