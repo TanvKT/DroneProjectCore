@@ -16,14 +16,14 @@
 #include "myRTOS_HAL.h"
 #include <stdbool.h>
 
-extern myRTOS_int_task_type_s* s_curr_task_p;
+extern myRTOS_int_task_type_vp s_curr_task_p;
 void                 myrtos_schedule(void);
-myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_s* t);
-myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_s* t);
+myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_vp t);
+myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_vp t);
 
 //testing functions
 myRTOS_return_type_e myrtos_block_all();
 myRTOS_return_type_e myrtos_unblock_all();
-myRTOS_int_task_type_s* myrtos_get_idle_task();
+myRTOS_int_task_type_vp myrtos_get_idle_task();
 
 #endif

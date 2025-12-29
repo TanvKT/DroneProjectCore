@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 static myRTOS_int_task_type_s           s_idle_task;
-myRTOS_int_task_type_s*                 s_curr_task_p = &s_idle_task;
+myRTOS_int_task_type_vp                 s_curr_task_p = &s_idle_task;
 static uint8_t                          s_idle_task_stack_arr[128]; //hard coding stack size here since we don't need much at all
 static volatile bool                    s_fatal = false;            //bool flag to determine if fatal error occurs and set schedule to idle
 
@@ -131,12 +131,12 @@ void myrtos_schedule(void)
  * @param t task to block
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_vp t)
 {
     t->b = true;
     return MYRTOS_SUCCESS;
 }
-myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_vp t)
 {    
     //ensure priority set to original priority and trigger count set to 0
     #ifndef MYRTOS_ROUND_ROBIN
@@ -229,7 +229,7 @@ myRTOS_return_type_e myrtos_unblock_all()
     //now iterate through blocked queue
     while (tasks->blocked.len != 0)
     {
-        myRTOS_int_task_type_s* t;
+        myRTOS_int_task_type_vp t;
         myRTOS_return_type_e ret;
 
         ret = myrtos_rem_blocked_task(&t, 0);
@@ -298,9 +298,9 @@ static void myrtos_idle_task(void* args)
 /**
  * @brief Testing function
  * 
- * @return myRTOS_int_task_type_s* 
+ * @return myRTOS_int_task_type_vp 
  */
-myRTOS_int_task_type_s* myrtos_get_idle_task()
+myRTOS_int_task_type_vp myrtos_get_idle_task()
 {
     return &s_idle_task;
 }

@@ -24,6 +24,7 @@
  * 
  */
 myRTOS_return_type_e    myRTOS_uart_init();
+myRTOS_return_type_e    myRTOS_uart_init_lock();
 int                     myRTOS_uart_write(const char *ptr, size_t len);
 int                     myRTOS_uart_read(char *ptr, size_t len);
 int                     myRTOS_uart_printf(const char* f, ...);

@@ -48,6 +48,7 @@ myRTOS_return_type_e    myrtos_disable_interupts();
  * MUTEX
  */
 myRTOS_return_type_e    myrtos_mutex_init(myRTOS_mutex_handle_s* h);
+myRTOS_return_type_e    myrtos_mutex_init_num(myRTOS_mutex_handle_s* h, size_t n);
 myRTOS_return_type_e    myrtos_mutex_take(myRTOS_mutex_handle_s* h);
 myRTOS_return_type_e    myrtos_mutex_give(myRTOS_mutex_handle_s* h);
 /**

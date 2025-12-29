@@ -35,4 +35,7 @@ void*                   myrtos_add_stack(size_t s);
 /* task heap */
 void*                   myrtos_get_heap_bp();
 
+/* lock heap */
+void*                   myrtos_get_lock_heap_bp();
+
 #endif

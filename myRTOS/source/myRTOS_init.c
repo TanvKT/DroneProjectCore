@@ -15,6 +15,7 @@
 #include "myRTOS_memory.h"
 #include "myRTOS_sched.h"
 #include "myRTOS_task_queue.h"
+#include "myRTOS_lock_heap.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -36,34 +37,23 @@ myRTOS_return_type_e myrtos_reset()
     //reset memory (zeroize)
     my_ret = myrtos_reset_memory();
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
-    #if MYRTOS_DEBUG_MODE
-    printf("--------MYRTOS MEMORY INITIALIZED--------\r\n");
-    #endif
+
+    //initialize lock heap for dynamic lock waiting lists
+    my_ret = myrtos_lock_heap_init();
+    if (my_ret != MYRTOS_SUCCESS) return my_ret;
 
     //initialize heap for dynamic task allocation
     my_ret = myrtos_heap_init();
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
-    #if MYRTOS_DEBUG_MODE
-    printf("---------MYRTOS HEAP INITIALIZED---------\r\n");
-    #endif
 
     //grab the base pointer of the task memory holding array
     my_ret = myrtos_init_task_arr(myrtos_get_task_arr_bp());
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
-    #if MYRTOS_DEBUG_MODE
-    printf("------MYRTOS TASK ARRAY INITIALIZED------\r\n");
-    #endif
 
     //grab the base pointer of the task management array
     my_ret = myrtos_init_task_queue(myrtos_get_task_queue_bp());
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
-    #if MYRTOS_DEBUG_MODE
-    printf("------MYRTOS TASK QUEUE INITIALIZED------\r\n");
-    #endif
 
-    #if MYRTOS_DEBUG_MODE
-    printf("-----MYRTOS SUCCESSFULLY INITIALIZED-----\r\n");
-    #endif
     return MYRTOS_SUCCESS;
 }
 
@@ -76,16 +66,21 @@ myRTOS_return_type_e myrtos_reset()
  */
 myRTOS_return_type_e myrtos_init()
 {
-    myRTOS_return_type_e my_ret;
+    myRTOS_return_type_e my_ret1;
+    myRTOS_return_type_e my_ret2;
 
-    //need to initialize myRTOS UART before anything
-    my_ret = myRTOS_uart_init();
-    if (my_ret != MYRTOS_SUCCESS) return my_ret;
+    my_ret1 = myrtos_reset();
+
+    //Initialize UART for communication
+    my_ret2 = myRTOS_uart_init();
+    if (my_ret2 != MYRTOS_SUCCESS) return my_ret2;
     #if MYRTOS_DEBUG_MODE
     printf("---------MYRTOS UART INITIALIZED---------\r\n");
+    if (my_ret1 == MYRTOS_SUCCESS) printf("------------MYRTOS INITIALIZED-----------\r\n");
+    else printf("--------------MYRTOS FAILED--------------\r\n");
     #endif
 
-    return myrtos_reset();
+    return my_ret1;
 }
 
 /**

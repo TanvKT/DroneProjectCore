@@ -18,6 +18,15 @@ static myRTOS_mutex_handle_s s_myRTOS_uart_lock;
 
 //function declarations
 /**
+ * @brief initialize the UART lock, needed after memory reset
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myRTOS_uart_init_lock()
+{
+    return myrtos_mutex_init(&s_myRTOS_uart_lock);
+}
+/**
  * @brief initialize uart object on defined pins
  * 
  * @return cy_rslt_t
@@ -30,7 +39,7 @@ myRTOS_return_type_e myRTOS_uart_init()
     
     if(!myrtos_hal_uart_set_baud(MYRTOS_UART_BAUD)) return MYRTOS_UART_BAUD_FAIL;
 
-    my_ret = myrtos_mutex_init(&s_myRTOS_uart_lock);
+    my_ret = myRTOS_uart_init_lock();
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
     
     return MYRTOS_SUCCESS;

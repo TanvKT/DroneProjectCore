@@ -23,6 +23,7 @@ typedef struct MYRTOS_MEMORY {
     uint8_t tasks_queue_arr  [MYRTOS_TASK_QUEUE_SIZE + 1]    __attribute__((aligned(8)));
     uint8_t stacks_arr       [MYRTOS_STACK_SIZE + 1]         __attribute__((aligned(8)));
     uint8_t heap_arr         [MYRTOS_HEAP_SIZE + 1]          __attribute__((aligned(8)));
+    uint8_t lock_heap_arr    [MYRTOS_LOCK_HEAP_SIZE + 1]     __attribute__((aligned(8)));
 } myRTOS_memory;
 static myRTOS_memory s_mem;
 
@@ -72,6 +73,16 @@ void*   myrtos_get_heap_bp()
 }
 
 /**
+ * @brief 
+ * 
+ * @return void* 
+ */
+void*   myrtos_get_lock_heap_bp()
+{
+    return &s_mem.lock_heap_arr[0];
+}
+
+/**
  * @brief allocate a stack to a new task
  * 
  *          Need to we have an extra bit of padding for the case where we
@@ -111,6 +122,7 @@ myRTOS_return_type_e myrtos_reset_memory()
     if (!memset(&s_mem.tasks_arr[0],          0, sizeof(uint8_t)*(MYRTOS_TASK_SIZE-1)))         return MYRTOS_MEMINIT_FAIL;
     if (!memset(&s_mem.tasks_queue_arr[0],    0, sizeof(uint8_t)*(MYRTOS_TASK_QUEUE_SIZE-1)))   return MYRTOS_MEMINIT_FAIL;
     if (!memset(&s_mem.heap_arr[0],           0, sizeof(uint8_t)*(MYRTOS_HEAP_SIZE-1)))         return MYRTOS_MEMINIT_FAIL;
+    if (!memset(&s_mem.lock_heap_arr[0],      0, sizeof(uint8_t)*(MYRTOS_LOCK_HEAP_SIZE-1)))    return MYRTOS_MEMINIT_FAIL;
 
     return MYRTOS_SUCCESS;
 }

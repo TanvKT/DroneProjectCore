@@ -23,7 +23,7 @@
  */
 #define LOW_INT_PRIORITY (1UL << __NVIC_PRIO_BITS) - 1
 
-int myrtos_hal_schedule_init(myRTOS_int_task_type_s* t)
+int myrtos_hal_schedule_init(myRTOS_int_task_type_vp t)
 {
     NVIC_SetPriority(PendSV_IRQn, LOW_INT_PRIORITY);
     __set_PSP((uint32_t)t->sp);
@@ -41,7 +41,7 @@ int myrtos_hal_schedule_init(myRTOS_int_task_type_s* t)
     __ISB();
     return 1;
 }
-int myrtos_hal_stack_setup(myRTOS_int_task_type_s* t)
+int myrtos_hal_stack_setup(myRTOS_int_task_type_vp t)
 {
     //modify the stack with desired values, these are the values the CPU expects to pop when starting task
     uint32_t* sp = (uint32_t*)t->sp;
@@ -119,5 +119,9 @@ void myrtos_hal_disable_interrupts(void)
 uint8_t myrtos_hal_get_lowest_priority(void)
 {
     return LOW_INT_PRIORITY;
+}
+uint8_t myrtos_hal_atomic_read_write(volatile uint8_t* v)
+{
+    return __STREXB(1, v);
 }
 #endif

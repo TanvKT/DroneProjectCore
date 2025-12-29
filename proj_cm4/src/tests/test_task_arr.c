@@ -277,7 +277,7 @@ void task_array_test()
 
     //test task removal
     //peek, shouldn't modify
-    myRTOS_int_task_type_s* t_i;
+    myRTOS_int_task_type_vp t_i;
     ret = myrtos_peek_task(&t_i);
     sprintf(str, myrtos_debug_print(ret));
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
@@ -499,10 +499,10 @@ void task_array_test()
     }
 
     //grab pointers
-    myRTOS_int_task_type_s* t1_i = (myRTOS_int_task_type_s*)myrtos_get_task_arr_bp();
-    myRTOS_int_task_type_s* t2_i = t1_i + 1;
-    myRTOS_int_task_type_s* t3_i = t2_i + 1;
-    myRTOS_int_task_type_s* t4_i = t3_i + 1;
+    myRTOS_int_task_type_vp t1_i = (myRTOS_int_task_type_vp)myrtos_get_task_arr_bp();
+    myRTOS_int_task_type_vp t2_i = t1_i + 1;
+    myRTOS_int_task_type_vp t3_i = t2_i + 1;
+    myRTOS_int_task_type_vp t4_i = t3_i + 1;
     myRTOS_task_queue_s* blocked = myrtos_get_blocked_list_ptr();
     ret = myrtos_push_blocked_task(t1_i);
     sprintf(str, myrtos_debug_print(ret));

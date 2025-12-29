@@ -29,12 +29,13 @@
  * 
  * @return int 0 if fail 1 if success
  */
-int         myrtos_hal_schedule_init(myRTOS_int_task_type_s* t);    //Initialize scheduler (ISR flags, Stacks, etc..)
-int         myrtos_hal_stack_setup(myRTOS_int_task_type_s* t);      //Initialize stack data per task
+int         myrtos_hal_schedule_init(myRTOS_int_task_type_vp t);    //Initialize scheduler (ISR flags, Stacks, etc..)
+int         myrtos_hal_stack_setup(myRTOS_int_task_type_vp t);      //Initialize stack data per task
 void        myrtos_hal_set_hardware_timer_flag(void);               //Set Hardware Timer Flag
 void        myrtos_hal_enable_interrupts(void);                     //enable global interrupts
 void        myrtos_hal_disable_interrupts(void);                    //disable global interrupts
 uint8_t     myrtos_hal_get_lowest_priority(void);                   //get lowest hardware priority
+uint8_t     myrtos_hal_atomic_read_write(volatile uint8_t* v);      //atomicly read and write to a uint8_t, used for lock correctness
 
 /**
  * @brief Initialize UART on defined RX and TX pins using defined baud rate

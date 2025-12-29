@@ -29,7 +29,7 @@
  *      and the allocated stack space for those tasks
  */
 static myRTOS_queue_arr_s* s_task_queue;
-static myRTOS_int_task_type_s* s_task_p;
+static myRTOS_int_task_type_vp s_task_p;
 static size_t n_tasks = 0;
 
 /**
@@ -52,7 +52,7 @@ myRTOS_queue_arr_s* myrtos_get_task_queue()
 myRTOS_return_type_e myrtos_init_task_arr(void* p)
 {
     if (!p) return MYRTOS_MEMORY_INVALID;
-    s_task_p = (myRTOS_int_task_type_s*)p;
+    s_task_p = (myRTOS_int_task_type_vp)p;
     return MYRTOS_SUCCESS;
 }
 
@@ -86,7 +86,7 @@ myRTOS_return_type_e myrtos_init_task_queue(void* p)
  * @param t task pointer to copy to
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_s** t)
+myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_vp* t)
 {
     uint8_t i;
     for (i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
@@ -111,7 +111,7 @@ myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_s** t)
  * @param t task pointer to copy to
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s** t)
+myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_vp* t)
 {
     uint8_t i;
     for (i = 0; i < MYRTOS_QUEUE_ARR_LEN; i++)
@@ -137,7 +137,7 @@ myRTOS_return_type_e myrtos_peek_task(myRTOS_int_task_type_s** t)
  * @param t pointer to task data
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_vp t)
 {
     s_task_queue->level[t->t.priority].arr[s_task_queue->level[t->t.priority].en] = t;
 
@@ -154,7 +154,7 @@ myRTOS_return_type_e myrtos_push_task(myRTOS_int_task_type_s* t)
  * @param t pointer to task data to push
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_push_blocked_task(myRTOS_int_task_type_s* t)
+myRTOS_return_type_e myrtos_push_blocked_task(myRTOS_int_task_type_vp t)
 {
     if (MYRTOS_MAX_TASKS == s_task_queue->blocked.len) return MYRTOS_TASK_LIMIT_REACHED;  //a bit redundant here but leaving this check
 
@@ -186,13 +186,13 @@ myRTOS_task_queue_s* myrtos_get_blocked_list_ptr()
  * @param n max number of elements to copy
  * @return size_t total number of elements copied
  */
-size_t myrtos_get_blocked_list_cpy(myRTOS_int_task_type_s* l, size_t n)
+size_t myrtos_get_blocked_list_cpy(myRTOS_int_task_type_vp l, size_t n)
 {
     size_t i;
     for (i = 0; i < n; i++)
     {
         if (s_task_queue->blocked.len == i) return i;
-        if (!memcpy(l, s_task_queue->blocked.arr[i], sizeof(myRTOS_int_task_type_s))) return i;
+        if (!memcpy((void*)l, (void*)s_task_queue->blocked.arr[i], sizeof(myRTOS_int_task_type_s))) return i;
     }
     return n;
 }
@@ -204,7 +204,7 @@ size_t myrtos_get_blocked_list_cpy(myRTOS_int_task_type_s* l, size_t n)
  * @param i index to remove at
  * @return myRTOS_return_type_e 
  */
-myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s** t, size_t i)
+myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_vp* t, size_t i)
 {
     if (s_task_queue->blocked.len <= i) return MYRTOS_FAIL;
 
@@ -245,7 +245,7 @@ myRTOS_return_type_e myrtos_rem_blocked_task(myRTOS_int_task_type_s** t, size_t 
  */
 myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
 {
-    myRTOS_int_task_type_s* t_i;
+    myRTOS_int_task_type_vp t_i;
 
     if (MYRTOS_MAX_TASKS == n_tasks) return MYRTOS_TASK_LIMIT_REACHED;
 
@@ -282,7 +282,7 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     if (t_i->sp == NULL) return MYRTOS_MEMORY_LIMIT_REACHED;
 
     //copy task to end of array
-    if (!memcpy(&(t_i->t), t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
+    if (!memcpy((void*)&(t_i->t), (void*)t, sizeof(myRTOS_task_type_s))) return MYRTOS_MEMCPY_FAIL;
 
     if (!myrtos_hal_stack_setup(t_i)) return MYRTOS_FAIL;
 

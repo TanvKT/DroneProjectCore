@@ -33,7 +33,7 @@ typedef struct
     size_t len;
     size_t st;
     size_t en;
-    myRTOS_int_task_type_s* arr[MYRTOS_MAX_TASKS];
+    myRTOS_int_task_type_vp arr[MYRTOS_MAX_TASKS];
 } myRTOS_task_queue_s;
 
 typedef struct MYRTOS_QUEUE_ARR_S {
@@ -46,12 +46,12 @@ typedef struct MYRTOS_QUEUE_ARR_S {
  myRTOS_return_type_e   myrtos_init_task_arr(void* p);
  myRTOS_return_type_e   myrtos_init_task_queue(void* p);
  myRTOS_return_type_e   myrtos_register_task_i(myRTOS_task_type_s* t);
- myRTOS_return_type_e   myrtos_request_task(myRTOS_int_task_type_s** t);
- myRTOS_return_type_e   myrtos_peek_task(myRTOS_int_task_type_s** t);
- myRTOS_return_type_e   myrtos_push_task(myRTOS_int_task_type_s* t);
- myRTOS_return_type_e   myrtos_push_blocked_task(myRTOS_int_task_type_s* t);
+ myRTOS_return_type_e   myrtos_request_task(myRTOS_int_task_type_vp* t);
+ myRTOS_return_type_e   myrtos_peek_task(myRTOS_int_task_type_vp* t);
+ myRTOS_return_type_e   myrtos_push_task(myRTOS_int_task_type_vp t);
+ myRTOS_return_type_e   myrtos_push_blocked_task(myRTOS_int_task_type_vp t);
  myRTOS_task_queue_s*   myrtos_get_blocked_list_ptr();
- size_t                 myrtos_get_blocked_list_cpy(myRTOS_int_task_type_s* l, size_t n);
- myRTOS_return_type_e   myrtos_rem_blocked_task(myRTOS_int_task_type_s** t, size_t i);
+ size_t                 myrtos_get_blocked_list_cpy(myRTOS_int_task_type_vp l, size_t n);
+ myRTOS_return_type_e   myrtos_rem_blocked_task(myRTOS_int_task_type_vp* t, size_t i);
 
  #endif

@@ -130,15 +130,15 @@ void sched_test()
     //block a couple tasks
     myRTOS_queue_arr_s* tasks = myrtos_get_task_queue();
     #ifdef MYRTOS_ROUND_ROBIN
-    myRTOS_int_task_type_s* t1 =  tasks->level[0].arr[0];
-    myRTOS_int_task_type_s* t4 =  tasks->level[0].arr[3];
-    myRTOS_int_task_type_s* t8 =  tasks->level[0].arr[7];
-    myRTOS_int_task_type_s* t12 = tasks->level[0].arr[11];
+    myRTOS_int_task_type_vp t1 =  tasks->level[0].arr[0];
+    myRTOS_int_task_type_vp t4 =  tasks->level[0].arr[3];
+    myRTOS_int_task_type_vp t8 =  tasks->level[0].arr[7];
+    myRTOS_int_task_type_vp t12 = tasks->level[0].arr[11];
     #else
-    myRTOS_int_task_type_s* t1 =  tasks->level[0].arr[0];
-    myRTOS_int_task_type_s* t4 =  tasks->level[1].arr[0];
-    myRTOS_int_task_type_s* t8 =  tasks->level[5].arr[1];
-    myRTOS_int_task_type_s* t12 = tasks->level[0].arr[3];
+    myRTOS_int_task_type_vp t1 =  tasks->level[0].arr[0];
+    myRTOS_int_task_type_vp t4 =  tasks->level[1].arr[0];
+    myRTOS_int_task_type_vp t8 =  tasks->level[5].arr[1];
+    myRTOS_int_task_type_vp t12 = tasks->level[0].arr[3];
     #endif
 
     ret = myrtos_block_task(t1);
@@ -189,7 +189,7 @@ void sched_test()
     TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
     
     //running through scheduler now should only return the idle task
-    myRTOS_int_task_type_s* idle = myrtos_get_idle_task();
+    myRTOS_int_task_type_vp idle = myrtos_get_idle_task();
     for (int i = 0; i < 200; i++)
     {
         #ifdef MYRTOS_DEBUG_MODE

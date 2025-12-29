@@ -52,6 +52,7 @@
 #define     MYRTOS_STACK_SIZE          (128 * 1024)                     //default allocate 128KB stack for tasks
 #define     MYRTOS_MIN_STACK_SIZE      (4 * 1024)                       //default minimum stack size for tasks 4KB
 #define     MYRTOS_HEAP_SIZE           (64 * 1024)                      //default heap size 64KB
+#define     MYRTOS_LOCK_HEAP_SIZE      (2 * 1024)                       //default lock heap size 2KB
 
 /* SCHEDULING */
 #define     MYRTOS_TASK_NAME_LEN       64                               //max length of task names

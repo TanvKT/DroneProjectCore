@@ -66,7 +66,7 @@ typedef struct MYRTOS_TASK_TYPE_S {
  * @brief Internal use task type
  * 
  */
-typedef struct MYRTOS_INT_TASK_TYPE_S {
+typedef volatile struct MYRTOS_INT_TASK_TYPE_S {
     void* sp;               //stack pointer (This needs to be first element so memory addressing is consistent)
     size_t b_i;             //index in blocked list (set to -1(max val) when not in blocked list)
     myRTOS_task_type_s t;   //task
@@ -78,13 +78,17 @@ typedef struct MYRTOS_INT_TASK_TYPE_S {
     #endif
     bool b;                 //is task blocked
 } myRTOS_int_task_type_s;
+typedef myRTOS_int_task_type_s* volatile myRTOS_int_task_type_vp;
 
  /**
   * @brief Inter task communication types
   * 
   */
  typedef struct MYRTOS_MUTEX_HANDLE_S {
-    bool taken;
+    volatile uint8_t taken;         //0 if avaliable and 1 if taken
+    myRTOS_int_task_type_vp t;      //currently holding task
+    myRTOS_int_task_type_vp* t_l;   //points to region in memory where blocked tasks lie
+    size_t n;                       //number of tasks being blocked by this lock
  } myRTOS_mutex_handle_s;
 
 typedef struct MYRTOS_SEMAPHORE_HANDLE_S {
