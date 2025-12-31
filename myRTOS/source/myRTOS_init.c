@@ -54,6 +54,9 @@ myRTOS_return_type_e myrtos_reset()
     my_ret = myrtos_init_task_queue(myrtos_get_task_queue_bp());
     if (my_ret != MYRTOS_SUCCESS) return my_ret;
 
+    //reset current task pointer
+    s_curr_task_p = NULL;
+
     return MYRTOS_SUCCESS;
 }
 

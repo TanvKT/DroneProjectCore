@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 static myRTOS_int_task_type_s           s_idle_task;
-myRTOS_int_task_type_vp                 s_curr_task_p = &s_idle_task;
+myRTOS_int_task_type_vp                 s_curr_task_p = NULL;
 static uint8_t                          s_idle_task_stack_arr[128]; //hard coding stack size here since we don't need much at all
 static volatile bool                    s_fatal = false;            //bool flag to determine if fatal error occurs and set schedule to idle
 

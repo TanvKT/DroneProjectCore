@@ -115,7 +115,7 @@ myRTOS_return_type_e myrtos_reset_memory()
 {
     s_off_p = 0;
     //ensure non-null pointer to memory sections, redundant check for safety reasons
-    if (NULL == stack_start || NULL == &s_mem.tasks_arr[0] || NULL == &s_mem.heap_arr[0]) return MYRTOS_MEMINIT_FAIL;
+    if (NULL == stack_start) return MYRTOS_MEMINIT_FAIL;
 
     //zeroize
     if (!memset(stack_start,                  0, sizeof(uint8_t)*(MYRTOS_STACK_SIZE-1)))        return MYRTOS_MEMINIT_FAIL;

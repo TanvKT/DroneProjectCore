@@ -17,6 +17,7 @@ void heap_test();
 void task_array_test();
 void task_timer_test();
 void sched_test();
+void locks_test();
 int  test_all();
 
 #endif

@@ -78,17 +78,18 @@ typedef volatile struct MYRTOS_INT_TASK_TYPE_S {
     #endif
     bool b;                 //is task blocked
 } myRTOS_int_task_type_s;
-typedef myRTOS_int_task_type_s* volatile myRTOS_int_task_type_vp;
+typedef myRTOS_int_task_type_s * volatile myRTOS_int_task_type_vp;
 
  /**
   * @brief Inter task communication types
   * 
   */
- typedef struct MYRTOS_MUTEX_HANDLE_S {
-    volatile uint8_t taken;         //0 if avaliable and 1 if taken
+ typedef volatile struct MYRTOS_MUTEX_HANDLE_S {
     myRTOS_int_task_type_vp t;      //currently holding task
     myRTOS_int_task_type_vp* t_l;   //points to region in memory where blocked tasks lie
+    size_t t_i;                     //waiting list add index
     size_t n;                       //number of tasks being blocked by this lock
+    uint8_t taken;                  //0 if avaliable and 1 if taken
  } myRTOS_mutex_handle_s;
 
 typedef struct MYRTOS_SEMAPHORE_HANDLE_S {

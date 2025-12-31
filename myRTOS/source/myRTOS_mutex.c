@@ -34,12 +34,14 @@
  */
 myRTOS_return_type_e myrtos_mutex_init(myRTOS_mutex_handle_s* h)
 {
+    if (NULL == h) return MYRTOS_FAIL;
     //set default fields, assume size of 2 here as default
     h->taken = 0;
     h->t = NULL;
     h->t_l = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
     if (NULL == h->t_l) return MYRTOS_MEMORY_LIMIT_REACHED; 
     h->n = 2;
+    h->t_i = 0;
 
     return MYRTOS_SUCCESS;
 }
@@ -53,12 +55,14 @@ myRTOS_return_type_e myrtos_mutex_init(myRTOS_mutex_handle_s* h)
  */
 myRTOS_return_type_e myrtos_mutex_init_num(myRTOS_mutex_handle_s* h, size_t n)
 {
+    if (NULL == h) return MYRTOS_FAIL;
     //set default fields
     h->taken = 0;
     h->t = NULL;
     h->t_l = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * n);
     if (NULL == h->t_l) return MYRTOS_MEMORY_LIMIT_REACHED; 
     h->n = n;
+    h->t_i = 0;
 
     return MYRTOS_SUCCESS;
 }
@@ -72,27 +76,111 @@ myRTOS_return_type_e myrtos_mutex_init_num(myRTOS_mutex_handle_s* h, size_t n)
  *      In the special case where this task has a higher priority than the holding task,
  *      we need to boost the holding task's priority (priority inheritance) to avoid priority inversion
  * 
- * @param h 
+ * @param h pointer to mutex handle object
  * @return myRTOS_return_type_e 
  */
 myRTOS_return_type_e myrtos_mutex_take(myRTOS_mutex_handle_s* h)
 {
-    // myrtos_disable_interupts();
+    if (NULL == h) return MYRTOS_FAIL;
 
-    // //check lock status
-    // if (0 == h->taken)
-    // {
-    //     //not taken
-    //     //don't need atomic instructions here since we are disabling interrupts for short critical section
-    //     h->taken = 1;
-    //     h->t = s_curr_task_p;
-    // }
-    // else //taken
-    // {
+    myrtos_disable_interupts();
 
-    // }
+    //current task should never be null in this case, but adding a sanity check
+    if (NULL == s_curr_task_p)
+    {
+        myrtos_enable_interupts();
+        return MYRTOS_FAIL;
+    }
 
+    //check lock status
+    if (0 == h->taken)
+    {
+        //not taken
+        //don't need atomic instructions here since we are disabling interrupts for short critical section
+        h->taken = 1;
+        h->t = s_curr_task_p;
+    }
+    else //taken
+    {
+        //If using dynamic priority, need to ensure that blocked task returns to correct priority
+        #ifdef MYRTOS_DYNAMIC_PRIORITY
+        s_curr_task_p->t.priority = s_curr_task_p->o_prio;
+        #endif
+
+        //block the current task
+        if (myrtos_block_task(s_curr_task_p) != MYRTOS_SUCCESS)
+        {
+            myrtos_enable_interupts();
+            return MYRTOS_FAIL;
+        }
+
+        //check if priority of this waiting task is greater than holding task
+        if (s_curr_task_p->t.priority < h->t->t.priority)
+        {
+            //inherit priority value
+            h->t->t.priority = s_curr_task_p->t.priority;
+        }
+
+        //add to waiting list
+        if (h->t_i == h->n)
+        {
+            //need to increase list size
+            myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t_l, h->n * 2);
+            if (NULL == tmp)
+            {
+                myrtos_enable_interupts();
+                return MYRTOS_MEMORY_LIMIT_REACHED;
+            }
+
+            //if memory successfully realloc'd continue
+            h->t_l = tmp;
+            h->n = h->n*2;
+        }
+        h->t_l[h->t_i] = s_curr_task_p;
+        h->t_i++;
+    }
+
+    myrtos_enable_interupts();
     return MYRTOS_SUCCESS;
 }
+
+/**
+ * @brief Free mutex resource to be taken by other tasks
+ * 
+ * Mutex holds a list of waiting tasks, need to unblock all
+ * Also need to ensure that original priority is returned on holding task
+ * 
+ * @param h pointer to mutex handle object
+ * @return myRTOS_return_type_e 
+ */
 myRTOS_return_type_e myrtos_mutex_give(myRTOS_mutex_handle_s* h)
-{return MYRTOS_SUCCESS;}
+{
+    if (NULL == h) return MYRTOS_FAIL;
+
+    myrtos_disable_interupts();
+
+    //ensure current task is not null, it should never actually be null here
+    if (NULL == h->t || h->t != s_curr_task_p)
+    {
+        myrtos_enable_interupts();
+        return MYRTOS_FAIL;
+    }
+
+    //iterate through waiting list and unblock all tasks
+    for (int i = 0; i < h->t_i; i++)
+    {
+        if (myrtos_unblock_task(h->t_l[i]) != MYRTOS_SUCCESS)
+        {
+            myrtos_enable_interupts();
+            return MYRTOS_FAIL;
+        }
+    }
+
+    //reset mutex to be taken again
+    h->t = NULL;
+    h->t_i = 0;
+    h->taken = 0;
+
+    myrtos_enable_interupts();
+    return MYRTOS_SUCCESS;
+}

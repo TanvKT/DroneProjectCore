@@ -52,5 +52,9 @@ int test_all()
     getchar();
     RUN_TEST(sched_test);
 
+    printf("Enter anything to start the locks test...\r\n");
+    getchar();
+    RUN_TEST(locks_test);
+
     return UNITY_END();
 }

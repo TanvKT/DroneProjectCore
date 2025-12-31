@@ -28,7 +28,7 @@
  * @brief array type to assist in priority queue allocation of tasks
  * 
  */
-typedef struct
+typedef volatile struct
 {
     size_t len;
     size_t st;
@@ -36,7 +36,7 @@ typedef struct
     myRTOS_int_task_type_vp arr[MYRTOS_MAX_TASKS];
 } myRTOS_task_queue_s;
 
-typedef struct MYRTOS_QUEUE_ARR_S {
+typedef volatile struct MYRTOS_QUEUE_ARR_S {
     myRTOS_task_queue_s level[MYRTOS_QUEUE_ARR_LEN];
     myRTOS_task_queue_s blocked;
 } myRTOS_queue_arr_s;
