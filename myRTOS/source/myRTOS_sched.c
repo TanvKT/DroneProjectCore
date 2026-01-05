@@ -211,10 +211,8 @@ myRTOS_return_type_e myrtos_unblock_all()
             //ensure priority set to original priority and trigger count set to 0
             if (tasks->level[i].arr[j]->b)
             {
-                #ifndef MYRTOS_ROUND_ROBIN
-                tasks->level[i].arr[j]->t.priority = tasks->level[i].arr[j]->o_prio;
-                #endif
                 #ifdef MYRTOS_DYNAMIC_PRIORITY
+                tasks->level[i].arr[j]->t.priority = tasks->level[i].arr[j]->o_prio;
                 tasks->level[i].arr[j]->trig = 0;
                 #endif
 
@@ -234,10 +232,8 @@ myRTOS_return_type_e myrtos_unblock_all()
         if (ret != MYRTOS_SUCCESS) return ret;
         
         //ensure priority set to original priority and trigger count set to 0
-        #ifndef MYRTOS_ROUND_ROBIN
-        t->t.priority = t->o_prio;
-        #endif
         #ifdef MYRTOS_DYNAMIC_PRIORITY
+        t->t.priority = t->o_prio;
         t->trig = 0;
         #endif
 

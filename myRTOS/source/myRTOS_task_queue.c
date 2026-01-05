@@ -122,7 +122,8 @@ myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_vp* t)
             // match found remove
             // need to shift everything from i to end
             size_t j = i;
-            while (j != s_task_queue->level[t->t.priority].en)
+            size_t last = (s_task_queue->level[t->t.priority].en == 0) ? MYRTOS_MAX_TASKS - 1 : s_task_queue->level[t->t.priority].en - 1;
+            while (j != last)
             {
                 size_t nxt_idx = (j == MYRTOS_MAX_TASKS - 1) ? 0 : j + 1;
                 s_task_queue->level[t->t.priority].arr[j] = s_task_queue->level[t->t.priority].arr[nxt_idx];
@@ -130,7 +131,7 @@ myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_vp* t)
             }
 
             //decrement end and len
-            s_task_queue->level[t->t.priority].en = (s_task_queue->level[t->t.priority].en == 0) ? MYRTOS_MAX_TASKS - 1 : s_task_queue->level[t->t.priority].en - 1;
+            s_task_queue->level[t->t.priority].en = last;
             s_task_queue->level[t->t.priority].len--;
             return MYRTOS_SUCCESS;
         }
@@ -295,11 +296,9 @@ myRTOS_return_type_e myrtos_register_task_i(myRTOS_task_type_s* t)
     //      it must increase its priority to the priority value of the task that is waiting on it
     //if using dynamic priority, we need to lower the priority of tasks that are
     //      consuming too many time slices in sequence
-    #ifndef MYRTOS_ROUND_ROBIN
-    t_i->o_prio = t->priority;
-    #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
-    //if we are using dynamic priority, we need to record trigger number
+    //if we are using dynamic priority, we need to record trigger number and original priority
+    t_i->o_prio = t->priority;
     t_i->trig = 0;
     #endif
 

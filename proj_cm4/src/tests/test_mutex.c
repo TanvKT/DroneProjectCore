@@ -110,7 +110,9 @@ void mutex_test()
 
     // Check priority inheritance: t1 (priority 0) should be 0
     TEST_ASSERT_EQUAL_MESSAGE(0, t1->t.priority, "t1 priority should remain at 0");
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
     TEST_ASSERT_EQUAL_MESSAGE(0, t1->o_prio, "t1 original priority should remain 0");
+    #endif
 
     // Check mutex waiting list
     TEST_ASSERT_EQUAL_MESSAGE(1, mutex1.t_i, "Mutex1 waiting index should be 1");

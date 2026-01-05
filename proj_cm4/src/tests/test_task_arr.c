@@ -355,6 +355,8 @@ void task_array_test()
     t_i->t.name[1] = '2'; //change to t2
     #ifndef MYRTOS_ROUND_ROBIN
     t_i->t.priority = MYRTOS_PRIORITY_LEVELS - 1;
+    #endif
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
     t_i->o_prio = MYRTOS_PRIORITY_LEVELS - 1;
     #endif
     ret = myrtos_push_task(t_i);
@@ -472,6 +474,134 @@ void task_array_test()
     #endif
     TEST_ASSERT_EQUAL_size_t(0, tasks->blocked.len);
 
+    //test removal for specific task
+    myrtos_reset();
+    ret = myrtos_register_task_i(&t1);
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    tasks = myrtos_get_task_queue();
+    myRTOS_int_task_type_vp tr = tasks->level[0].arr[0];
+    
+    //at this point st should be 0 and ed should be 1
+    TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+
+    //try to remove this task
+    ret = myrtos_remove_task(tr);
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+
+    //reset again and register maximum amount of tasks
+    myrtos_reset();
+    tasks = myrtos_get_task_queue();
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    for (size_t i = 0; i < MYRTOS_MAX_TASKS; i++)
+    {
+        printf("Adding t%d for removal test\n", i);
+        sprintf(str, "t%d", i);
+        ret = myrtos_register_task(
+            str,
+            0,
+            NULL,
+            NULL,
+            MYRTOS_MIN_STACK_SIZE
+        );
+    }
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+
+    //test remove at end
+    tr = tasks->level[0].arr[MYRTOS_MAX_TASKS-1];
+    ret = myrtos_remove_task(tr);
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+    myrtos_push_task(tr);
+    for (size_t i = 0; i < MYRTOS_MAX_TASKS; i++)
+    {
+        printf("Test Remove at end [%d]\n", i);
+        sprintf(str, "t%d", i);
+        TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[i]->t.name);
+    }
+
+    //test remove at start
+    tr = tasks->level[0].arr[0];
+    ret = myrtos_remove_task(tr);
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+    myrtos_push_task(tr);
+    for (size_t i = 0; i < MYRTOS_MAX_TASKS-1; i++)
+    {
+        printf("Test Remove at start [%d]\n", i);
+        sprintf(str, "t%d", i+1);
+        TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[i]->t.name);
+    }
+    TEST_ASSERT_EQUAL_STRING("t0", tasks->level[0].arr[MYRTOS_MAX_TASKS-1]->t.name);
+
+    //test remove at middle
+    size_t mid_idx = MYRTOS_MAX_TASKS/2;
+    tr = tasks->level[0].arr[mid_idx];
+    ret = myrtos_remove_task(tr);
+    sprintf(str, myrtos_debug_print(ret));
+    TEST_ASSERT_EQUAL_UINT8_MESSAGE(MYRTOS_SUCCESS, ret, str);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].st);
+    myrtos_push_task(tr);
+    for (size_t i = 0; i < mid_idx; i++)
+    {
+        printf("Test Remove at middle1 [%d]\n", i);
+        sprintf(str, "t%d", i+1);
+        TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[i]->t.name);
+    }
+    for (size_t i = mid_idx; i < MYRTOS_MAX_TASKS-2; i++)
+    {
+        printf("Test Remove at middle2 [%d]\n", i);
+        sprintf(str, "t%d", i+2);
+        TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[i]->t.name);
+    }
+    TEST_ASSERT_EQUAL_STRING("t0", tasks->level[0].arr[MYRTOS_MAX_TASKS-2]->t.name);
+    sprintf(str, "t%d", mid_idx+1);
+    TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[MYRTOS_MAX_TASKS-1]->t.name);
+
+    //pop and push a task so that st = 1 and ed = 1
+    myrtos_request_task(&tr);
+    strcpy(str, (const char*)tr->t.name);
+    myrtos_push_task(tr);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
+    //if we remove from middle here the value at MYRTOS_MAX_TASKS-1 index should be the task that was just pushed
+    tr = tasks->level[0].arr[mid_idx];
+    ret = myrtos_remove_task(tr);
+    TEST_ASSERT_EQUAL(MYRTOS_SUCCESS, ret);
+    TEST_ASSERT_EQUAL_size_t(MYRTOS_MAX_TASKS-1, tasks->level[0].len);
+    TEST_ASSERT_EQUAL_size_t(0, tasks->level[0].en);
+    TEST_ASSERT_EQUAL_size_t(1, tasks->level[0].st);
+    TEST_ASSERT_EQUAL_STRING(str, tasks->level[0].arr[MYRTOS_MAX_TASKS-1]->t.name);
+
+    //remove all
+    for (size_t i = 0; i < MYRTOS_MAX_TASKS-1; i++)
+    {
+        printf("Test Remove all [%d]\n", i);
+        tr = tasks->level[0].arr[0];
+        ret = myrtos_remove_task(tr);
+        TEST_ASSERT_EQUAL(MYRTOS_SUCCESS, ret);
+    }
+
+    //remove on empty
+    ret = myrtos_remove_task(tr);
+    TEST_ASSERT_EQUAL(MYRTOS_FAIL, ret);
 
     //test blocked list
     ret = myrtos_reset();
