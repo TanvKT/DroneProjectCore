@@ -17,6 +17,7 @@
 #include "myRTOS.h"
 #include "myRTOS_sched.h"
 #include "myRTOS_lock_heap.h"
+#include "myRTOS_task_queue.h"
 
 /**
  * @brief Initialize mutex lock
@@ -36,12 +37,12 @@ myRTOS_return_type_e myrtos_mutex_init(myRTOS_mutex_handle_s* h)
 {
     if (NULL == h) return MYRTOS_FAIL;
     //set default fields, assume size of 2 here as default
-    h->taken = 0;
     h->t = NULL;
     h->t_l = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
     if (NULL == h->t_l) return MYRTOS_MEMORY_LIMIT_REACHED; 
     h->n = 2;
     h->t_i = 0;
+    h->in_prio = 0;
 
     return MYRTOS_SUCCESS;
 }
@@ -49,20 +50,23 @@ myRTOS_return_type_e myrtos_mutex_init(myRTOS_mutex_handle_s* h)
  * @brief Initialize mutex lock to predetermined size
  * 
  * Wating list initialized to n items
+ * If n is passed as zero, will default to 1
  * 
  * @param h mutex handle type, must ensure this lives in static memory
+ * @param n number of items to initialize waiting list to
  * @return myRTOS_return_type_e 
  */
 myRTOS_return_type_e myrtos_mutex_init_num(myRTOS_mutex_handle_s* h, size_t n)
 {
     if (NULL == h) return MYRTOS_FAIL;
+    n = (0 == n) ? 1 : n; //default n to 1
     //set default fields
-    h->taken = 0;
     h->t = NULL;
     h->t_l = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * n);
     if (NULL == h->t_l) return MYRTOS_MEMORY_LIMIT_REACHED; 
     h->n = n;
     h->t_i = 0;
+    h->in_prio = 0;
 
     return MYRTOS_SUCCESS;
 }
@@ -93,12 +97,12 @@ myRTOS_return_type_e myrtos_mutex_take(myRTOS_mutex_handle_s* h)
     }
 
     //check lock status
-    if (0 == h->taken)
+    if (NULL == h->t)
     {
         //not taken
         //don't need atomic instructions here since we are disabling interrupts for short critical section
-        h->taken = 1;
         h->t = s_curr_task_p;
+        h->in_prio = s_curr_task_p->t.priority;
     }
     else //taken
     {
@@ -117,15 +121,22 @@ myRTOS_return_type_e myrtos_mutex_take(myRTOS_mutex_handle_s* h)
         //check if priority of this waiting task is greater than holding task
         if (s_curr_task_p->t.priority < h->t->t.priority)
         {
+            myRTOS_return_type_e my_ret;
+            //need to remove and replace
+            my_ret = myrtos_remove_task(h->t);
+            if (my_ret != MYRTOS_SUCCESS) return my_ret;
             //inherit priority value
             h->t->t.priority = s_curr_task_p->t.priority;
+            //push back onto queue
+            my_ret = myrtos_push_task(h->t);
+            if (my_ret != MYRTOS_SUCCESS) return my_ret;
         }
 
         //add to waiting list
         if (h->t_i == h->n)
         {
             //need to increase list size
-            myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t_l, h->n * 2);
+            myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t_l, sizeof(myRTOS_int_task_type_vp) * h->n * 2);
             if (NULL == tmp)
             {
                 myrtos_enable_interupts();
@@ -176,10 +187,17 @@ myRTOS_return_type_e myrtos_mutex_give(myRTOS_mutex_handle_s* h)
         }
     }
 
+    //ensure giving task returns to correct priority if inheritance occured
+    //if the priority has lowered due to dynamic schedule we need to ensure that we don't increase when giving up mutex
+    #ifdef MYRTOS_DYNAMIC_PRIORITY
+    h->t->t.priority = (h->in_prio < h->t->t.priority) ? h->t->t.priority : h->in_prio;
+    #else
+    h->t->t.priority = h->in_prio;
+    #endif
+
     //reset mutex to be taken again
     h->t = NULL;
     h->t_i = 0;
-    h->taken = 0;
 
     myrtos_enable_interupts();
     return MYRTOS_SUCCESS;

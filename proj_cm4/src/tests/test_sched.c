@@ -29,7 +29,7 @@ void sched_test()
     //register a couple tasks at varying priority levels
     #if MYRTOS_PRIORITY_LEVELS != 7 || (MYRTOS_DYNAMIC_PRIORITY && MYRTOS_PRIO_LOWER_THRESH != 3)
     printf("MYRTOS_PRIORITY_LEVELS != 7 or MYRTOS_DYNAMIC_PRIORITY enabled and MYRTOS_PRIO_LOWER_THRESH not 3\r\n");
-    printf("Schedule Test is deterministic so it needs these values to be set correctly, skipping\r\n");
+    printf("Schedule Test is deterministic so it needs these values to be set accordingly, skipping\r\n");
     #else
     myrtos_register_task("t1", 0, NULL, NULL, MYRTOS_MIN_STACK_SIZE);
     myrtos_register_task("t2", 0, NULL, NULL, MYRTOS_MIN_STACK_SIZE);

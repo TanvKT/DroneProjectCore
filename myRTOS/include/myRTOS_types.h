@@ -70,10 +70,8 @@ typedef volatile struct MYRTOS_INT_TASK_TYPE_S {
     void* sp;               //stack pointer (This needs to be first element so memory addressing is consistent)
     size_t b_i;             //index in blocked list (set to -1(max val) when not in blocked list)
     myRTOS_task_type_s t;   //task
-    #ifndef MYRTOS_ROUND_ROBIN
-    uint8_t o_prio;         //original priority
-    #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
+    uint8_t o_prio;         //original priority
     uint8_t trig;           //number of times full time slice used
     #endif
     bool b;                 //is task blocked
@@ -85,11 +83,11 @@ typedef myRTOS_int_task_type_s * volatile myRTOS_int_task_type_vp;
   * 
   */
  typedef volatile struct MYRTOS_MUTEX_HANDLE_S {
-    myRTOS_int_task_type_vp t;      //currently holding task
+    myRTOS_int_task_type_vp t;      //currently holding task (also used as taken flag)
     myRTOS_int_task_type_vp* t_l;   //points to region in memory where blocked tasks lie
     size_t t_i;                     //waiting list add index
     size_t n;                       //number of tasks being blocked by this lock
-    uint8_t taken;                  //0 if avaliable and 1 if taken
+    uint8_t in_prio;                //inherited priority of lock
  } myRTOS_mutex_handle_s;
 
 typedef struct MYRTOS_SEMAPHORE_HANDLE_S {

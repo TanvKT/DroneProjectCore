@@ -104,6 +104,42 @@ myRTOS_return_type_e myrtos_request_task(myRTOS_int_task_type_vp* t)
 
     return MYRTOS_SUCCESS;
 }
+
+/**
+ * @brief remove a specific task from the scheduling queue
+ * 
+ * Linear time complexity O(N), where N is the total number of tasks
+ * 
+ * @param t task to remove
+ * @return myRTOS_return_type_e 
+ */
+ myRTOS_return_type_e myrtos_remove_task(myRTOS_int_task_type_vp t)
+ {
+    for (size_t i = 0; i < MYRTOS_MAX_TASKS; i++)
+    {
+        if (s_task_queue->level[t->t.priority].arr[i] == t)
+        {
+            // match found remove
+            // need to shift everything from i to end
+            size_t j = i;
+            while (j != s_task_queue->level[t->t.priority].en)
+            {
+                size_t nxt_idx = (j == MYRTOS_MAX_TASKS - 1) ? 0 : j + 1;
+                s_task_queue->level[t->t.priority].arr[j] = s_task_queue->level[t->t.priority].arr[nxt_idx];
+                j = nxt_idx;
+            }
+
+            //decrement end and len
+            s_task_queue->level[t->t.priority].en = (s_task_queue->level[t->t.priority].en == 0) ? MYRTOS_MAX_TASKS - 1 : s_task_queue->level[t->t.priority].en - 1;
+            s_task_queue->level[t->t.priority].len--;
+            return MYRTOS_SUCCESS;
+        }
+        //else continue
+    }
+
+    //should never reach here, return fail
+    return MYRTOS_FAIL;
+ }
 /**
  * @brief Returns data of first task but does not remove
  *              Pretty much same logic as above

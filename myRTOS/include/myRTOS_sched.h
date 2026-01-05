@@ -25,5 +25,6 @@ myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_vp t);
 myRTOS_return_type_e myrtos_block_all();
 myRTOS_return_type_e myrtos_unblock_all();
 myRTOS_int_task_type_vp myrtos_get_idle_task();
+myRTOS_return_type_e myrtos_reset_sched();
 
 #endif

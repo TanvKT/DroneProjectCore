@@ -139,10 +139,8 @@ myRTOS_return_type_e myrtos_block_task(myRTOS_int_task_type_vp t)
 myRTOS_return_type_e myrtos_unblock_task(myRTOS_int_task_type_vp t)
 {    
     //ensure priority set to original priority and trigger count set to 0
-    #ifndef MYRTOS_ROUND_ROBIN
-    t->t.priority = t->o_prio;
-    #endif
     #ifdef MYRTOS_DYNAMIC_PRIORITY
+    t->t.priority = t->o_prio;
     t->trig = 0;
     #endif
 
@@ -268,6 +266,19 @@ myRTOS_return_type_e myrtos_unblock_all()
 myRTOS_return_type_e myrtos_set_fatal()
 {
     s_fatal = true;
+    return MYRTOS_SUCCESS;
+}
+/**
+ * @brief Resets myrtos scheduling params
+ * 
+ * Use case is really only for debug, don't see any reason for this to be used otherwise
+ * 
+ * @return myRTOS_return_type_e 
+ */
+myRTOS_return_type_e myrtos_reset_sched()
+{
+    s_fatal = false;
+    s_curr_task_p = NULL;
     return MYRTOS_SUCCESS;
 }
 

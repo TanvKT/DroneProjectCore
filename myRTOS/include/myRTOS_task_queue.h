@@ -47,6 +47,7 @@ typedef volatile struct MYRTOS_QUEUE_ARR_S {
  myRTOS_return_type_e   myrtos_init_task_queue(void* p);
  myRTOS_return_type_e   myrtos_register_task_i(myRTOS_task_type_s* t);
  myRTOS_return_type_e   myrtos_request_task(myRTOS_int_task_type_vp* t);
+ myRTOS_return_type_e   myrtos_remove_task(myRTOS_int_task_type_vp t);
  myRTOS_return_type_e   myrtos_peek_task(myRTOS_int_task_type_vp* t);
  myRTOS_return_type_e   myrtos_push_task(myRTOS_int_task_type_vp t);
  myRTOS_return_type_e   myrtos_push_blocked_task(myRTOS_int_task_type_vp t);
