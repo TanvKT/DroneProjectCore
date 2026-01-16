@@ -156,7 +156,7 @@ myRTOS_return_type_e myrtos_semaphore_take(myRTOS_semaphore_handle_s* h)
                     //inherit priority value
                     h->t[i]->t.priority = s_curr_task_p->t.priority;
                     //push back onto queue
-                    my_ret = myrtos_push_task(h->t);
+                    my_ret = myrtos_push_task(h->t[i]);
                     if (my_ret != MYRTOS_SUCCESS) return my_ret;
                 }
             }
@@ -181,8 +181,10 @@ myRTOS_return_type_e myrtos_semaphore_take(myRTOS_semaphore_handle_s* h)
             h->t_l_i++;
 
             //flag scheduler interrupt
+            #if 0 == MYRTOS_TESTING
             myrtos_hal_set_hardware_timer_flag();
             myrtos_hal_timer_reset();
+            #endif
             myrtos_enable_interupts();
 
             #if 1 == MYRTOS_TESTING

@@ -161,8 +161,10 @@ myRTOS_return_type_e myrtos_mutex_take(myRTOS_mutex_handle_s* h)
             h->t_i++;
 
             //flag scheduler interrupt
+            #if 0 == MYRTOS_TESTING
             myrtos_hal_set_hardware_timer_flag();
             myrtos_hal_timer_reset();
+            #endif
             myrtos_enable_interupts();
 
             #if 1 == MYRTOS_TESTING

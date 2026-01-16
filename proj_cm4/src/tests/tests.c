@@ -56,5 +56,9 @@ int test_all()
     getchar();
     RUN_TEST(mutex_test);
 
+    printf("Enter anything to start the semaphore test...\r\n");
+    getchar();
+    RUN_TEST(semaphore_test);
+
     return UNITY_END();
 }
