@@ -86,15 +86,22 @@ typedef myRTOS_int_task_type_s * volatile myRTOS_int_task_type_vp;
     myRTOS_int_task_type_vp t;      //currently holding task (also used as taken flag)
     myRTOS_int_task_type_vp* t_l;   //points to region in memory where blocked tasks lie
     size_t t_i;                     //waiting list add index
-    size_t n;                       //number of tasks being blocked by this lock
+    size_t n;                       //length of blocked list
     uint8_t in_prio;                //inherited priority of lock
  } myRTOS_mutex_handle_s;
 
-typedef struct MYRTOS_SEMAPHORE_HANDLE_S {
-    uint8_t v;
+typedef volatile struct MYRTOS_SEMAPHORE_HANDLE_S {
+    myRTOS_int_task_type_vp* t;     //list of holding tasks
+    myRTOS_int_task_type_vp* t_l;   //list of waiting tasks
+    uint8_t* in_prio;               //inherited priority of lock
+    size_t t_l_i;                   //add index of waiting tasks
+    size_t t_l_n;                   //length of waiting list
+    uint8_t t_i;                    //add index of holding tasks
+    uint8_t t_n;                    //length of holding tasks list
+    int8_t c;                       //taken counter
 } myRTOS_semaphore_handle_s;
 
-typedef struct MYRTOS_QUEUE_HANDLE_S {
+typedef volatile struct MYRTOS_QUEUE_HANDLE_S {
     int len;
     size_t size;
 } myRTOS_queue_handle_s;

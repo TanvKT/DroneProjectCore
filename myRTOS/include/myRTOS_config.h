@@ -75,5 +75,6 @@
 /* MISC */
 #define     MYRTOS_DEBUG_MODE          1                                //0 - debug prints disabled
                                                                         //1 - debug prints enabled
+#define     MYRTOS_TESTING             1
 
 #endif

@@ -54,7 +54,8 @@ myRTOS_return_type_e    myrtos_mutex_give(myRTOS_mutex_handle_s* h);
 /**
  * SEMAPHORE
  */
-myRTOS_return_type_e    myrtos_semaphore_init(myRTOS_semaphore_handle_s* h);
+myRTOS_return_type_e    myrtos_semaphore_init(myRTOS_semaphore_handle_s* h, int8_t n);
+myRTOS_return_type_e    myrtos_semaphore_init_num(myRTOS_semaphore_handle_s* h, int8_t n, size_t w);
 myRTOS_return_type_e    myrtos_semaphore_take(myRTOS_semaphore_handle_s* h);
 myRTOS_return_type_e    myrtos_semaphore_give(myRTOS_semaphore_handle_s* h);
 /**

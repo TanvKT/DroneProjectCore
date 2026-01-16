@@ -87,72 +87,92 @@ myRTOS_return_type_e myrtos_mutex_take(myRTOS_mutex_handle_s* h)
 {
     if (NULL == h) return MYRTOS_FAIL;
 
-    myrtos_disable_interupts();
-
-    //current task should never be null in this case, but adding a sanity check
-    if (NULL == s_curr_task_p)
+    //attempt will stall until lock is taken
+    for (;;)
     {
-        myrtos_enable_interupts();
-        return MYRTOS_FAIL;
-    }
+        myrtos_disable_interupts();
 
-    //check lock status
-    if (NULL == h->t)
-    {
-        //not taken
-        //don't need atomic instructions here since we are disabling interrupts for short critical section
-        h->t = s_curr_task_p;
-        h->in_prio = s_curr_task_p->t.priority;
-    }
-    else //taken
-    {
-        //If using dynamic priority, need to ensure that blocked task returns to correct priority
-        #ifdef MYRTOS_DYNAMIC_PRIORITY
-        s_curr_task_p->t.priority = s_curr_task_p->o_prio;
-        #endif
-
-        //block the current task
-        if (myrtos_block_task(s_curr_task_p) != MYRTOS_SUCCESS)
+        //current task should never be null in this case, but adding a sanity check
+        if (NULL == s_curr_task_p)
         {
             myrtos_enable_interupts();
             return MYRTOS_FAIL;
         }
 
-        //check if priority of this waiting task is greater than holding task
-        if (s_curr_task_p->t.priority < h->t->t.priority)
+        //check lock status
+        if (NULL == h->t)
         {
-            myRTOS_return_type_e my_ret;
-            //need to remove and replace
-            my_ret = myrtos_remove_task(h->t);
-            if (my_ret != MYRTOS_SUCCESS) return my_ret;
-            //inherit priority value
-            h->t->t.priority = s_curr_task_p->t.priority;
-            //push back onto queue
-            my_ret = myrtos_push_task(h->t);
-            if (my_ret != MYRTOS_SUCCESS) return my_ret;
-        }
+            //not taken
+            //don't need atomic instructions here since we are disabling interrupts for short critical section
+            h->t = s_curr_task_p;
+            h->in_prio = s_curr_task_p->t.priority;
 
-        //add to waiting list
-        if (h->t_i == h->n)
+            //success, return
+            myrtos_enable_interupts();
+            return MYRTOS_SUCCESS;
+        }
+        else //taken
         {
-            //need to increase list size
-            myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t_l, sizeof(myRTOS_int_task_type_vp) * h->n * 2);
-            if (NULL == tmp)
+            //If using dynamic priority, need to ensure that blocked task returns to correct priority
+            #ifdef MYRTOS_DYNAMIC_PRIORITY
+            s_curr_task_p->t.priority = s_curr_task_p->o_prio;
+            #endif
+
+            //block the current task
+            if (myrtos_block_task(s_curr_task_p) != MYRTOS_SUCCESS)
             {
                 myrtos_enable_interupts();
-                return MYRTOS_MEMORY_LIMIT_REACHED;
+                return MYRTOS_FAIL;
             }
 
-            //if memory successfully realloc'd continue
-            h->t_l = tmp;
-            h->n = h->n*2;
+            //check if priority of this waiting task is greater than holding task
+            #ifndef MYRTOS_ROUND_ROBIN
+            if (s_curr_task_p->t.priority < h->t->t.priority)
+            {
+                //any edits to the task queue need to be atomic so interrupts must remain disabled
+                myRTOS_return_type_e my_ret;
+                //need to remove and replace
+                my_ret = myrtos_remove_task(h->t);
+                if (my_ret != MYRTOS_SUCCESS) return my_ret;
+                //inherit priority value
+                h->t->t.priority = s_curr_task_p->t.priority;
+                //push back onto queue
+                my_ret = myrtos_push_task(h->t);
+                if (my_ret != MYRTOS_SUCCESS) return my_ret;
+            }
+            #endif
+
+            //add to waiting list
+            if (h->t_i == h->n)
+            {
+                //need to increase list size (this is slow and we want to avoid it because interrupts must still be disabled)
+                myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t_l, sizeof(myRTOS_int_task_type_vp) * h->n * 2);
+                if (NULL == tmp)
+                {
+                    myrtos_enable_interupts();
+                    return MYRTOS_MEMORY_LIMIT_REACHED;
+                }
+
+                //if memory successfully realloc'd continue
+                h->t_l = tmp;
+                h->n = h->n*2;
+            }
+            h->t_l[h->t_i] = s_curr_task_p;
+            h->t_i++;
+
+            //flag scheduler interrupt
+            myrtos_hal_set_hardware_timer_flag();
+            myrtos_hal_timer_reset();
+            myrtos_enable_interupts();
+
+            #if 1 == MYRTOS_TESTING
+            return MYRTOS_SUCCESS;
+            #endif
         }
-        h->t_l[h->t_i] = s_curr_task_p;
-        h->t_i++;
     }
 
-    myrtos_enable_interupts();
-    return MYRTOS_SUCCESS;
+    //should never reach
+    return MYRTOS_FAIL;
 }
 
 /**
@@ -178,7 +198,7 @@ myRTOS_return_type_e myrtos_mutex_give(myRTOS_mutex_handle_s* h)
     }
 
     //iterate through waiting list and unblock all tasks
-    for (int i = 0; i < h->t_i; i++)
+    for (size_t i = 0; i < h->t_i; i++)
     {
         if (myrtos_unblock_task(h->t_l[i]) != MYRTOS_SUCCESS)
         {
