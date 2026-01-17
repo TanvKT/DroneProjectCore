@@ -1,7 +1,16 @@
 /**
  * @file myRTOS_semaphore.c
  * @author your name (you@domain.com)
- * @brief 
+ * @brief Semaphore implementaton
+ * 
+ *          Semaphores can be initialized with negative values
+ *          We keep track of holding and waiting tasks using internal lock heap
+ *          Non-holding tasks can give semaphore, but may result in longer critical section due to re-alloc overhead
+ * 
+ *          When priority inheritance occurs, holding tasks get priority bumped.  The priority of the holding tasks only goes back
+ *              down to original priority once they release the resource even if the task that caused the holding tasks to inherit a higher
+ *              priority is no longer blocked
+ * 
  * @version 0.1
  * @date 2025-11-04
  * 
@@ -201,8 +210,7 @@ myRTOS_return_type_e myrtos_semaphore_take(myRTOS_semaphore_handle_s* h)
  * @brief Give up semaphore
  * 
  * Interrupts disabled throughout entire process
- * Semaphore can be given by non-holding task if and only if count is negative
- *      This only occurs if semaphore initialized to a negative value
+ * Semaphore can be given by non-holding task, this increments holding value and if needed will dynamically re-alloc holding task array length
  * If priority inheritance has occured, all holding tasks will remain at higher priority in scheduler until they give up the resource
  *      even if the task that caused the priority increase is no longer in the waiting list
  * 
@@ -213,25 +221,23 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
 {
     if (NULL == h) return MYRTOS_FAIL;
 
-    //edge case where count is not zero, we just increment and return
-    if (h->c != 0)
+    myrtos_disable_interupts();
+
+    //in this case if count is negative just increment
+    //we already know that if count is negative that there are no holding tasks since count can only be negative
+    //  upon initialization
+    if (h->c < 0)
     {
         h->c++;
+        myrtos_enable_interupts();
         return MYRTOS_SUCCESS;
     }
-
-    myrtos_disable_interupts();
 
     //iterate through holding tasks to check if giver is current task
     uint8_t give_i;
     for (give_i = 0; give_i < h->t_n; give_i++)
     {
         if (h->t[give_i] == s_curr_task_p) break;
-    }
-    if (give_i == h->t_n)
-    {
-        myrtos_enable_interupts();
-        return MYRTOS_FAIL;
     }
 
     //iterate through waiting list to find highest priority task and unblock
@@ -259,8 +265,24 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
 
     //ensure giving task returns to correct priority if inheritance occured
     //if the priority has lowered due to dynamic schedule we need to ensure that we don't increase when giving up mutex
-    //important to note that if priority inheritance did occur, then all holding tasks will be held at inherited priority until they give up the semaphore
+    //important to note that if priority inheritance did occur, 
+    //      then all holding tasks will be held at inherited priority until they give up the semaphore
+    if (give_i == h->t_n) //giving task not one of the holding tasks
+    {
+        myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t, sizeof(myRTOS_int_task_type_vp)*(h->t_n + 1));
+        if (NULL == tmp)
+        {
+            myrtos_enable_interupts();
+            return MYRTOS_FAIL;
+        }
 
+        //increment values for next take
+        h->t_n++;
+        h->c++;
+        myrtos_enable_interupts();
+        return MYRTOS_SUCCESS;
+    }
+    //since giving task is a holding task, need to remove it from the holding list
     #ifdef MYRTOS_DYNAMIC_PRIORITY
     h->t[give_i]->t.priority = (h->in_prio[give_i] < h->t[give_i]->t.priority) ? h->t[give_i]->t.priority : h->in_prio[give_i];
     #else
