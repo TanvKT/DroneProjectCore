@@ -222,6 +222,11 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
     if (NULL == h) return MYRTOS_FAIL;
 
     myrtos_disable_interupts();
+    if (NULL == s_curr_task_p)
+    {
+        myrtos_enable_interupts();
+        return MYRTOS_FAIL;
+    }
 
     //in this case if count is negative just increment
     //we already know that if count is negative that there are no holding tasks since count can only be negative
@@ -234,39 +239,43 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
     }
 
     //iterate through holding tasks to check if giver is current task
-    uint8_t give_i;
+    uint8_t give_i = 0;
     for (give_i = 0; give_i < h->t_n; give_i++)
     {
         if (h->t[give_i] == s_curr_task_p) break;
     }
 
     //iterate through waiting list to find highest priority task and unblock
-    uint8_t highest_p = MYRTOS_PRIORITY_LEVELS;
-    size_t highest_i = 0;
-    for (size_t i = 0; i < h->t_l_i; i++)
+    if (h->t_l_i != 0) //check if waiting list actually has any tasks
     {
-        if (highest_p > h->t_l[i]->t.priority)
+        uint8_t highest_p = MYRTOS_PRIORITY_LEVELS;
+        size_t highest_i = 0;
+        for (size_t i = 0; i < h->t_l_i; i++)
         {
-            highest_p = h->t_l[i]->t.priority;
-            highest_i = i;
+            if (highest_p > h->t_l[i]->t.priority)
+            {
+                highest_p = h->t_l[i]->t.priority;
+                highest_i = i;
+            }
         }
+        if (myrtos_unblock_task(h->t_l[highest_i]) != MYRTOS_SUCCESS)
+        {
+            myrtos_enable_interupts();
+            return MYRTOS_FAIL;
+        }
+        //need to repair waiting list
+        for (size_t i = highest_i; i < h->t_l_i - 1; i++)
+        {
+            h->t_l[i] = h->t_l[i+1];
+        }
+        h->t_l_i--;
     }
-    if (myrtos_unblock_task(h->t_l[highest_i]) != MYRTOS_SUCCESS)
-    {
-        myrtos_enable_interupts();
-        return MYRTOS_FAIL;
-    }
-    //need to repair waiting list
-    for (size_t i = highest_i; i < h->t_l_i - 1; i++)
-    {
-        h->t_l[i] = h->t_l[i+1];
-    }
-    h->t_l_i--;
 
     //ensure giving task returns to correct priority if inheritance occured
     //if the priority has lowered due to dynamic schedule we need to ensure that we don't increase when giving up mutex
     //important to note that if priority inheritance did occur, 
     //      then all holding tasks will be held at inherited priority until they give up the semaphore
+
     if (give_i == h->t_n) //giving task not one of the holding tasks
     {
         myRTOS_int_task_type_vp* tmp = myrtos_lock_realloc((void*)h->t, sizeof(myRTOS_int_task_type_vp)*(h->t_n + 1));
@@ -289,9 +298,10 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
     h->t[give_i]->t.priority = h->in_prio[give_i];
     #endif
     //remove task from semaphore list
-    for (uint8_t i = give_i; i < h->t_n - 1; i++)
+    uint8_t j = give_i;
+    for (j = give_i; j < h->t_i; j++)
     {
-        h->t[i] = h->t[i+1];
+        h->t[j] = h->t[j+1];
     }
     h->t_i--;
 

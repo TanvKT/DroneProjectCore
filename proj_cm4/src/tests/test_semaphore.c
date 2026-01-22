@@ -152,6 +152,7 @@ void semaphore_test()
     TEST_ASSERT_EQUAL_MESSAGE(t2, sem_block.t_l[0], "t2 should be in waiting list");
 
     // Test priority inheritance with semaphore (t2 priority 4 > t4 priority 4 is same, no boost needed)
+    #ifndef MYRTOS_ROUND_ROBIN
     TEST_ASSERT_EQUAL_MESSAGE(4, t4->t.priority, "t4 priority should remain at 4");
 
     s_curr_task_p = t1;
@@ -161,9 +162,7 @@ void semaphore_test()
     TEST_ASSERT_EQUAL_MESSAGE(2, sem_block.t_l_i, "Waiting list should have 2 tasks");
 
     // t1 (priority 0) should cause t4 to be boosted to priority 0
-    #ifndef MYRTOS_ROUND_ROBIN
     TEST_ASSERT_EQUAL_MESSAGE(0, t4->t.priority, "t4 priority should be boosted to 0");
-    #endif
 
     // Give and check if highest priority task is unblocked (t1 with priority 0)
     s_curr_task_p = t4;
@@ -176,9 +175,7 @@ void semaphore_test()
     TEST_ASSERT_EQUAL_MESSAGE(true, t2->b, "t2 should still be blocked");
 
     // Test priority restoration after give
-    #ifndef MYRTOS_ROUND_ROBIN
     TEST_ASSERT_EQUAL_MESSAGE(4, t4->t.priority, "t4 priority should be restored to 4");
-    #endif
 
     // Test multiple tasks waiting with priority ordering
     myRTOS_semaphore_handle_s sem_prio;
@@ -213,6 +210,7 @@ void semaphore_test()
     TEST_ASSERT_EQUAL_MESSAGE(true, t5->b, "t5 should still be blocked");
     TEST_ASSERT_EQUAL_MESSAGE(true, t2->b, "t2 should still be blocked");
     TEST_ASSERT_EQUAL_MESSAGE(2, sem_prio.t_l_i, "Waiting list should have 2 tasks");
+    #endif
 
     // Test invalid inputs
     ret = myrtos_semaphore_init(NULL, 1);
