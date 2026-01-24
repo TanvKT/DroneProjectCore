@@ -11,6 +11,8 @@
  *              down to original priority once they release the resource even if the task that caused the holding tasks to inherit a higher
  *              priority is no longer blocked
  * 
+ *          When the semaphore is given, the scheduler will be envoked
+ * 
  * @version 0.1
  * @date 2025-11-04
  * 
@@ -234,6 +236,7 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
     if (h->c < 0)
     {
         h->c++;
+        // no need to invoke scheduler here since no tasks get unblocked
         myrtos_enable_interupts();
         return MYRTOS_SUCCESS;
     }
@@ -288,6 +291,13 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
         //increment values for next take
         h->t_n++;
         h->c++;
+
+        //flag scheduler interrupt
+        #if 0 == MYRTOS_TESTING
+        myrtos_hal_set_hardware_timer_flag();
+        myrtos_hal_timer_reset();
+        #endif
+
         myrtos_enable_interupts();
         return MYRTOS_SUCCESS;
     }
@@ -308,6 +318,11 @@ myRTOS_return_type_e myrtos_semaphore_give(myRTOS_semaphore_handle_s* h)
     //increment semaphore to be taken again
     h->c++;
     
+    //flag scheduler interrupt
+    #if 0 == MYRTOS_TESTING
+    myrtos_hal_set_hardware_timer_flag();
+    myrtos_hal_timer_reset();
+    #endif
     myrtos_enable_interupts();
     return MYRTOS_SUCCESS;
 }

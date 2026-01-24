@@ -61,8 +61,8 @@ myRTOS_return_type_e    myrtos_semaphore_give(myRTOS_semaphore_handle_s* h);
 /**
  * QUEUE
  */
-myRTOS_return_type_e    myrtos_queue_set(myRTOS_queue_handle_s* h, int l, size_t s);
-myRTOS_return_type_e    myrtos_queue_init(myRTOS_queue_handle_s* h);
+myRTOS_return_type_e    myrtos_queue_init(myRTOS_queue_handle_s* h, size_t l, size_t d);
+myRTOS_return_type_e    myrtos_queue_init_num(myRTOS_queue_handle_s* h, size_t l, size_t d, size_t wc, size_t wp);
 myRTOS_return_type_e    myrtos_queue_send(myRTOS_queue_handle_s* h, void* d);
 myRTOS_return_type_e    myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d);
 

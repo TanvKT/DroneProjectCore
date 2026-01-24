@@ -7,6 +7,7 @@
  *              this expected size is the number of tasks expected to use this lock
  *          If this number is exceeded, the mutex will dynamically re-allocate more memory
  *              to allow for more tasks to use lock
+ *          When a mutex is given the scheduler will be evoked
  * @version 0.1
  * @date 2025-11-04
  * 
@@ -221,6 +222,11 @@ myRTOS_return_type_e myrtos_mutex_give(myRTOS_mutex_handle_s* h)
     h->t = NULL;
     h->t_i = 0;
 
+    //flag scheduler interrupt
+    #if 0 == MYRTOS_TESTING
+    myrtos_hal_set_hardware_timer_flag();
+    myrtos_hal_timer_reset();
+    #endif
     myrtos_enable_interupts();
     return MYRTOS_SUCCESS;
 }

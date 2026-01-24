@@ -102,8 +102,18 @@ typedef volatile struct MYRTOS_SEMAPHORE_HANDLE_S {
 } myRTOS_semaphore_handle_s;
 
 typedef volatile struct MYRTOS_QUEUE_HANDLE_S {
-    int len;
-    size_t size;
+    myRTOS_int_task_type_vp* t_c;   //list of waiting consumer tasks
+    size_t t_c_i;                   //consumer waiting list add index
+    size_t t_c_n;                   //consumer waiting list length
+    myRTOS_int_task_type_vp* t_p;   //list of waiting producer tasks
+    size_t t_p_i;                   //producer waiting list add index
+    size_t t_p_n;                   //producer waiting list length
+    char* d;                        //data stored in queue
+    size_t st;                      //start of queue
+    size_t en;                      //end of queue
+    size_t cnt;                     //number of elements in queue
+    size_t len;                     //length of queue
+    size_t inc;                     //data increment size
 } myRTOS_queue_handle_s;
 
 #endif
