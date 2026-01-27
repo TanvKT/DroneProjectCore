@@ -40,28 +40,44 @@
 * so agrees to indemnify Cypress against all liability.
 *******************************************************************************/
 
-#include "cy_pdl.h"
-#include "cyhal.h"
-#include "cybsp.h"
+#include "main.h"
 
+void task1(void)
+{
+
+}
+void task2(void)
+{
+
+}
 
 int main(void)
 {
     cy_rslt_t result;
+    myRTOS_return_type_e my_ret;
+
+    /* Enable global interrupts */
+    __enable_irq();
 
     /* Initialize the device and board peripherals */
-    result = cybsp_init() ;
+    result = cybsp_init();
     if (result != CY_RSLT_SUCCESS)
     {
         CY_ASSERT(0);
     }
 
-    /* Enable global interrupts */
-    __enable_irq();
-
-    for (;;)
+    /* Initialize myRTOS for testing */
+    my_ret = myrtos_init();
+    if (my_ret != MYRTOS_SUCCESS)
     {
+        printf("MYRTOS INIT FAILED with error %s\r\n", myrtos_debug_print(my_ret));
+        for (;;){} //hang here
     }
+    
+    /* Start unity tests */
+    return test_all();
+
+    for (;;){}
 }
 
 /* [] END OF FILE */

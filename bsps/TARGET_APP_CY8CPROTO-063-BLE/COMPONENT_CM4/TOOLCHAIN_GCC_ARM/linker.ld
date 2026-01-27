@@ -309,7 +309,6 @@ SECTIONS
         __bss_end__ = .;
     } > ram
 
-
     .heap (NOLOAD):
     {
         __HeapBase = .;
