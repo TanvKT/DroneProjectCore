@@ -19,6 +19,7 @@ void task_timer_test();
 void sched_test();
 void mutex_test();
 void semaphore_test();
+void queue_test();
 int  test_all();
 
 #endif

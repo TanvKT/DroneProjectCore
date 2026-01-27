@@ -77,8 +77,6 @@ void semaphore_test()
     myRTOS_int_task_type_vp t7 = tasks->level[1].arr[0];
     #endif
 
-    t6->b = true;  //adding this in to supress a warning
-
     // Test basic take and give
     s_curr_task_p = t1;
     ret = myrtos_semaphore_take(&sem1);

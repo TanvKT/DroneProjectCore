@@ -52,12 +52,12 @@ myRTOS_return_type_e myrtos_queue_init(myRTOS_queue_handle_s* h, size_t l, size_
     h->len = l;
     h->inc = d;
 
-    h->t_c = myrtos_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
+    h->t_c = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
     if (NULL == h->t_c) return MYRTOS_MEMORY_LIMIT_REACHED;
     h->t_c_i = 0;
     h->t_c_n = 2;
 
-    h->t_p = myrtos_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
+    h->t_p = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * 2);
     if (NULL == h->t_p) return MYRTOS_MEMORY_LIMIT_REACHED;
     h->t_p_i = 0;
     h->t_p_n = 2;
@@ -88,12 +88,12 @@ myRTOS_return_type_e myrtos_queue_init_num(myRTOS_queue_handle_s* h, size_t l, s
     h->len = l;
     h->inc = d;
 
-    h->t_c = myrtos_alloc(sizeof(myRTOS_int_task_type_vp) * wc);
+    h->t_c = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * wc);
     if (NULL == h->t_c) return MYRTOS_MEMORY_LIMIT_REACHED;
     h->t_c_i = 0;
     h->t_c_n = wc;
 
-    h->t_p = myrtos_alloc(sizeof(myRTOS_int_task_type_vp) * wp);
+    h->t_p = myrtos_lock_alloc(sizeof(myRTOS_int_task_type_vp) * wp);
     if (NULL == h->t_p) return MYRTOS_MEMORY_LIMIT_REACHED;
     h->t_p_i = 0;
     h->t_p_n = wp;
@@ -115,7 +115,7 @@ myRTOS_return_type_e myrtos_queue_resize(myRTOS_queue_handle_s* h, size_t l, siz
 
     //need to disable interrupts to avoid queue being modified during re-allocation
     myrtos_disable_interupts();
-    h->d = myrtos_realloc(h->d, l * d);
+    h->d = myrtos_lock_realloc(h->d, l * d);
     if (NULL == h->d)
     {
         h->st = 0;
@@ -142,7 +142,7 @@ myRTOS_return_type_e myrtos_queue_resize(myRTOS_queue_handle_s* h, size_t l, siz
  */
 myRTOS_return_type_e myrtos_queue_send(myRTOS_queue_handle_s* h, void* d)
 {
-    if (NULL == h) return MYRTOS_FAIL;
+    if (NULL == h || NULL == d) return MYRTOS_FAIL;
 
     //infinite loop until data sent
     for (;;)
@@ -162,7 +162,7 @@ myRTOS_return_type_e myrtos_queue_send(myRTOS_queue_handle_s* h, void* d)
             //check for need of dynamic re-alloc on producer waiting list
             if (h->t_p_i == h->t_p_n)
             {
-                void* tmp = myrtos_realloc((void*)h->t_p, sizeof(myRTOS_int_task_type_vp) * 2 * h->t_p_n);
+                void* tmp = myrtos_lock_realloc((void*)h->t_p, sizeof(myRTOS_int_task_type_vp) * 2 * h->t_p_n);
                 if (NULL == tmp)
                 {
                     myrtos_enable_interupts();
@@ -190,7 +190,7 @@ myRTOS_return_type_e myrtos_queue_send(myRTOS_queue_handle_s* h, void* d)
     }
 
     //add to queue
-    if (NULL == memcpy(&(h->d[h->en]), d, h->inc))
+    if (NULL == memcpy(h->d + (h->en * h->inc), d, h->inc))
     {
         myrtos_enable_interupts();
         return MYRTOS_MEMCPY_FAIL;
@@ -221,6 +221,7 @@ myRTOS_return_type_e myrtos_queue_send(myRTOS_queue_handle_s* h, void* d)
         {
             h->t_c[i] = h->t_c[i+1];
         }
+        h->t_c_i--;
         //set scheduler flag
         #if 0 == MYRTOS_TESTING
         myrtos_hal_set_hardware_timer_flag();
@@ -244,7 +245,7 @@ myRTOS_return_type_e myrtos_queue_send(myRTOS_queue_handle_s* h, void* d)
  */
 myRTOS_return_type_e myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d)
 {
-    if (NULL == h) return MYRTOS_FAIL;
+    if (NULL == h || NULL == d) return MYRTOS_FAIL;
 
     //infinite loop until data sent
     for (;;)
@@ -264,7 +265,7 @@ myRTOS_return_type_e myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d)
             //check for need of dynamic re-alloc on consumer waiting list
             if (h->t_c_i == h->t_c_n)
             {
-                void* tmp = myrtos_realloc((void*)h->t_c, sizeof(myRTOS_int_task_type_vp) * 2 * h->t_c_n);
+                void* tmp = myrtos_lock_realloc((void*)h->t_c, sizeof(myRTOS_int_task_type_vp) * 2 * h->t_c_n);
                 if (NULL == tmp)
                 {
                     myrtos_enable_interupts();
@@ -273,7 +274,7 @@ myRTOS_return_type_e myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d)
                 h->t_c = tmp;
                 h->t_c_n = h->t_c_n * 2;
             }
-            h->t_p[h->t_c_i] = s_curr_task_p;
+            h->t_c[h->t_c_i] = s_curr_task_p;
             h->t_c_i++;
 
             //invoke scheduler and continue looping
@@ -292,7 +293,7 @@ myRTOS_return_type_e myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d)
     }
 
     //remove from queue
-    if (NULL == memcpy(d, &(h->d[h->st]), h->inc))
+    if (NULL == memcpy(d, h->d + (h->st * h->inc), h->inc))
     {
         myrtos_enable_interupts();
         return MYRTOS_MEMCPY_FAIL;
@@ -323,6 +324,7 @@ myRTOS_return_type_e myrtos_queue_recieve(myRTOS_queue_handle_s* h, void* d)
         {
             h->t_p[i] = h->t_p[i+1];
         }
+        h->t_p_i--;
         //set scheduler flag
         #if 0 == MYRTOS_TESTING
         myrtos_hal_set_hardware_timer_flag();

@@ -60,5 +60,9 @@ int test_all()
     getchar();
     RUN_TEST(semaphore_test);
 
+    printf("Enter anything to start the queue test...\r\n");
+    getchar();
+    RUN_TEST(queue_test);
+
     return UNITY_END();
 }
