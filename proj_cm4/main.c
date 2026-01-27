@@ -42,6 +42,15 @@
 
 #include "main.h"
 
+void task1(void)
+{
+
+}
+void task2(void)
+{
+
+}
+
 int main(void)
 {
     cy_rslt_t result;
@@ -64,11 +73,8 @@ int main(void)
         printf("MYRTOS INIT FAILED with error %s\r\n", myrtos_debug_print(my_ret));
         for (;;){} //hang here
     }
-
     
-    /* Initialize hardware */
-
-    /* Start test */
+    /* Start unity tests */
     return test_all();
 
     for (;;){}
