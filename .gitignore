@@ -147,3 +147,6 @@ Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
 [Dd]esktop.ini
+shlib/unity/unity_internals.h
+shlib/unity/unity.c
+shlib/unity/unity.h
